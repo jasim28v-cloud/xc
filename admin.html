@@ -1,54 +1,128 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>إدارة TikToki | رفع فيديوهات</title>
-    <style>
-        body { background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .card { background: #111; padding: 25px; border-radius: 12px; width: 320px; border: 1px solid #333; }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; }
-        input { background: #222; color: #fff; }
-        button { background: #fe2c55; color: #fff; font-weight: bold; cursor: pointer; }
-        #panel { display: none; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>TikTok Clone</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <!-- Cloudinary SDK -->
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 </head>
 <body>
-    <div id="login" class="card">
-        <h3>دخول المشرف</h3>
-        <input type="password" id="pw" placeholder="رمز الدخول">
-        <button onclick="if(document.getElementById('pw').value==='1234'){document.getElementById('login').style.display='none';document.getElementById('panel').style.display='block';}else{alert('خطأ!')}">دخول</button>
+    <!-- شاشة تسجيل الدخول -->
+    <div id="authScreen" class="screen">
+        <div class="auth-container">
+            <div class="logo">
+                <div class="logo-icon">🎵</div>
+                <h1>TikTok Clone</h1>
+            </div>
+            <div class="auth-tabs">
+                <button class="tab-btn active" data-tab="login">تسجيل الدخول</button>
+                <button class="tab-btn" data-tab="register">إنشاء حساب</button>
+            </div>
+            
+            <!-- نموذج تسجيل الدخول -->
+            <form id="loginForm" class="auth-form active">
+                <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" required>
+                <input type="password" id="loginPassword" placeholder="كلمة المرور" required>
+                <button type="submit" class="auth-btn">دخول</button>
+            </form>
+            
+            <!-- نموذج التسجيل -->
+            <form id="registerForm" class="auth-form">
+                <input type="text" id="regUsername" placeholder="اسم المستخدم" required>
+                <input type="email" id="regEmail" placeholder="البريد الإلكتروني" required>
+                <input type="password" id="regPassword" placeholder="كلمة المرور" required>
+                <button type="submit" class="auth-btn">إنشاء حساب</button>
+            </form>
+        </div>
     </div>
 
-    <div id="panel" class="card">
-        <h3>نظام الرفع لـ TikToki</h3>
-        <input type="text" id="un" placeholder="اسم المستخدم">
-        <input type="text" id="ds" placeholder="وصف المقطع">
-        <input type="file" id="fi" accept="video/*">
-        <button id="upBtn" onclick="upload()">نشر الآن</button>
-        <p id="st" style="font-size:11px; color:gray; text-align:center"></p>
+    <!-- الشاشة الرئيسية -->
+    <div id="mainScreen" class="screen" style="display: none;">
+        <!-- شريط التنقل السفلي -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-nav="home">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">الرئيسية</span>
+            </button>
+            <button class="nav-btn" data-nav="upload">
+                <span class="nav-icon">➕</span>
+                <span class="nav-label">رفع</span>
+            </button>
+            <button class="nav-btn" data-nav="profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">الملف</span>
+            </button>
+        </nav>
+
+        <!-- صفحة الفيديوهات -->
+        <div id="homePage" class="page active">
+            <div id="videoContainer" class="video-container">
+                <!-- الفيديوهات ستظهر هنا ديناميكياً -->
+                <div class="loading-spinner">جاري التحميل...</div>
+            </div>
+        </div>
+
+        <!-- صفحة رفع الفيديو -->
+        <div id="uploadPage" class="page">
+            <div class="upload-container">
+                <h2>رفع فيديو جديد</h2>
+                <div class="upload-area" id="uploadArea">
+                    <span class="upload-icon">📹</span>
+                    <p>اضغط لاختيار فيديو</p>
+                    <input type="file" id="videoInput" accept="video/*" style="display: none;">
+                </div>
+                <textarea id="videoDesc" placeholder="اكتب وصفاً للفيديو..." rows="3"></textarea>
+                <button id="uploadBtn" class="upload-submit">رفع الفيديو</button>
+                <div id="uploadProgress" style="display: none;">
+                    <div class="progress-bar"><div class="progress-fill"></div></div>
+                    <p>جاري الرفع...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحة الملف الشخصي -->
+        <div id="profilePage" class="page">
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">👤</div>
+                <h3 id="profileUsername">username</h3>
+                <p id="profileEmail">email@example.com</p>
+                <div class="profile-stats">
+                    <div><strong id="followersCount">0</strong><span>متابع</span></div>
+                    <div><strong id="followingCount">0</strong><span>يتابع</span></div>
+                    <div><strong id="videosCount">0</strong><span>فيديو</span></div>
+                </div>
+                <button id="logoutBtn" class="logout-btn">تسجيل خروج</button>
+            </div>
+            <div id="userVideos" class="user-videos">
+                <h4>فيديوهاتي</h4>
+                <div id="userVideosList" class="videos-grid"></div>
+            </div>
+        </div>
     </div>
 
-    <script>
-        async function upload() {
-            const f = document.getElementById('fi').files[0];
-            const st = document.getElementById('st');
-            if(!f) return alert('اختر فيديو أولاً');
-            st.innerText = "جاري المعالجة السحابية...";
-            const fd = new FormData();
-            fd.append('file', f);
-            fd.append('upload_preset', 'ml_default'); // تأكد من إعدادها في Cloudinary
+    <!-- مشغل الفيديو المنبثق -->
+    <div id="videoPlayerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <video id="modalVideo" controls autoplay style="width: 100%; max-height: 70vh;"></video>
+            <div class="video-info">
+                <h4 id="modalUsername"></h4>
+                <p id="modalDesc"></p>
+                <div class="video-actions">
+                    <button id="modalLikeBtn" class="action-btn">❤️ <span id="modalLikes">0</span></button>
+                    <button id="modalCommentBtn" class="action-btn">💬 <span id="modalComments">0</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            try {
-                const res = await fetch("https://api.cloudinary.com/v1_1/dlgwjrf8b/video/upload", {method:'POST', body:fd});
-                const d = await res.json();
-                await fetch("https://gorm-b3316-default-rtdb.firebaseio.com/videos.json", {
-                    method: 'POST',
-                    body: JSON.stringify({url: d.secure_url, username: document.getElementById('un').value, description: document.getElementById('ds').value, likes: 0})
-                });
-                alert('تم النشر بنجاح على TikToki!');
-                location.href = 'index.html';
-            } catch(e) { alert('فشل الرفع'); }
-        }
-    </script>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
