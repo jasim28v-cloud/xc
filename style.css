@@ -12,7 +12,6 @@ body {
     height: 100vh;
 }
 
-/* الشاشات */
 .screen {
     position: fixed;
     top: 0;
@@ -22,7 +21,7 @@ body {
     overflow-y: auto;
 }
 
-/* شاشة تسجيل الدخول */
+/* Auth Screen */
 .auth-container {
     min-height: 100vh;
     display: flex;
@@ -48,7 +47,6 @@ body {
     align-items: center;
     justify-content: center;
     margin: 0 auto 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 .logo h1 {
@@ -110,21 +108,21 @@ body {
     font-size: 18px;
     font-weight: bold;
     cursor: pointer;
-    transition: transform 0.2s;
 }
 
-.auth-btn:active {
-    transform: scale(0.98);
+.error-msg {
+    color: #ff6b6b;
+    font-size: 14px;
+    text-align: center;
 }
 
-/* الشاشة الرئيسية */
+/* Main Screen */
 #mainScreen {
     display: flex;
     flex-direction: column;
     background: #000;
 }
 
-/* شريط التنقل */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -165,7 +163,6 @@ body {
     color: #fff;
 }
 
-/* صفحات المحتوى */
 .page {
     display: none;
     flex: 1;
@@ -177,7 +174,7 @@ body {
     display: block;
 }
 
-/* حاوية الفيديوهات */
+/* Video Container */
 .video-container {
     height: 100vh;
     overflow-y: scroll;
@@ -212,18 +209,18 @@ body {
     margin-bottom: 10px;
 }
 
-.video-author .avatar {
+.avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #333;
+    background: #fe2c55;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
 }
 
-.video-author .username {
+.username {
     font-weight: bold;
     font-size: 16px;
 }
@@ -270,7 +267,7 @@ body {
     font-size: 12px;
 }
 
-/* صفحة الرفع */
+/* Upload Page */
 .upload-container {
     padding: 80px 20px 40px;
     max-width: 500px;
@@ -343,7 +340,7 @@ textarea {
     transition: width 0.3s;
 }
 
-/* صفحة الملف الشخصي */
+/* Profile Page */
 .profile-header {
     text-align: center;
     padding: 60px 20px 30px;
@@ -417,7 +414,7 @@ textarea {
     cursor: pointer;
 }
 
-/* مودال الفيديو */
+/* Modal */
 .modal {
     display: none;
     position: fixed;
