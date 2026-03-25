@@ -1,0 +1,32 @@
+:root { --tiktok-red: #fe2c55; --tiktok-cyan: #25f4ee; --black: #010101; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background-color: var(--black); color: white; overflow: hidden; }
+
+/* الهيدر والعلامة المائية */
+.main-header { position: fixed; top: 0; width: 100%; z-index: 100; text-align: center; padding: 15px; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); }
+.logo-text { font-size: 22px; font-weight: 900; background: linear-gradient(to right, var(--tiktok-cyan), #fff, var(--tiktok-red)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+.watermark {
+    position: absolute; padding: 6px 12px; background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(5px); border-radius: 20px; font-size: 12px; font-weight: bold;
+    z-index: 20; pointer-events: none; opacity: 0.4; transition: 0.5s;
+    display: flex; align-items: center; gap: 5px; color: #fff;
+}
+
+/* حاوية الفيديوهات */
+#app-container { width: 100%; max-width: 450px; height: 100vh; margin: 0 auto; overflow-y: scroll; scroll-snap-type: y mandatory; }
+#app-container::-webkit-scrollbar { display: none; }
+
+.video-section { position: relative; width: 100%; height: 100vh; scroll-snap-align: start; background: #000; }
+video { width: 100%; height: 100%; object-fit: cover; }
+
+.side-bar { position: absolute; right: 15px; bottom: 120px; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10; }
+.icon-group { text-align: center; cursor: pointer; }
+.icon-group i { font-size: 30px; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+.heart-active { color: var(--tiktok-red); }
+
+.video-data { position: absolute; bottom: 80px; left: 15px; right: 75px; z-index: 10; text-shadow: 0 1px 3px #000; }
+
+.bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 450px; left: 50%; transform: translateX(-50%); height: 60px; background: #000; display: flex; justify-content: space-around; align-items: center; border-top: 0.5px solid #222; z-index: 100; }
+.upload-btn { background: linear-gradient(to right, var(--tiktok-cyan), #fff, var(--tiktok-red)); padding: 2px 14px; border-radius: 8px; color: #000; cursor: pointer; }
+.user-p-img { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #fff; }
