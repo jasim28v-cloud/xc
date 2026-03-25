@@ -1,8 +1,11 @@
 let currentUser = null;
-let currentVideoId = null;
 let currentUserData = null;
+let currentVideoId = null;
+let currentShareUrl = null;
 let allUsers = {};
 let allVideos = [];
+let isMuted = true;
+let viewingProfileUserId = null;
 
 // ========== المصادقة ==========
 function switchAuth(type) {
@@ -33,8 +36,10 @@ async function register() {
             email: email,
             bio: '',
             avatar: '',
+            avatarUrl: '',
             followers: {},
             following: {},
+            totalLikes: 0,
             createdAt: Date.now()
         });
     } catch (error) {
@@ -52,60 +57,120 @@ async function loadUserData() {
     const snapshot = await db.ref(`users/${currentUser.uid}`).get();
     if (snapshot.exists()) {
         currentUserData = { uid: currentUser.uid, ...snapshot.val() };
-        document.getElementById('profileNameDisplay').innerText = currentUserData.username;
-        document.getElementById('profileBioDisplay').innerText = currentUserData.bio || 'مرحباً! أنا على SHΔDØW';
-        document.getElementById('profileAvatarDisplay').innerText = currentUserData.avatar || '👤';
-        document.getElementById('editUsername').value = currentUserData.username;
-        document.getElementById('editBio').value = currentUserData.bio || '';
-        document.getElementById('profileFollowers').innerText = Object.keys(currentUserData.followers || {}).length;
-        document.getElementById('profileFollowing').innerText = Object.keys(currentUserData.following || {}).length;
+        updateAvatarDisplay();
     }
+}
+
+function updateAvatarDisplay() {
+    const avatarUrl = currentUserData?.avatarUrl;
+    const avatarElements = document.querySelectorAll('.author-avatar, .profile-avatar-large, .comment-avatar, .search-avatar');
+    avatarElements.forEach(el => {
+        if (avatarUrl) {
+            el.innerHTML = `<img src="${avatarUrl}" alt="avatar">`;
+        } else {
+            el.innerHTML = currentUserData?.username?.charAt(0) || '👤';
+        }
+    });
 }
 
 db.ref('users').on('value', (snapshot) => { allUsers = snapshot.val() || {}; });
 
-// ========== عرض الفيديوهات ==========
+// ========== عرض الفيديوهات مع هاشتاج ==========
+function addHashtags(text) {
+    if (!text) return '';
+    return text.replace(/#(\w+)/g, '<span class="hashtag" onclick="searchHashtag(\'$1\')">#$1</span>');
+}
+
+function searchHashtag(tag) {
+    document.getElementById('searchInput').value = tag;
+    openSearch();
+    searchUsers();
+}
+
 db.ref('videos').on('value', (snapshot) => {
     const data = snapshot.val();
     if (!data) return;
     allVideos = [];
     Object.keys(data).forEach(key => allVideos.push({ id: key, ...data[key] }));
     allVideos.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    document.getElementById('profileVideos').innerText = allVideos.filter(v => v.sender === currentUser?.uid).length;
     renderVideos();
 });
 
 function renderVideos() {
-    const container = document.getElementById('video-stack');
+    const container = document.getElementById('videosContainer');
     if (!container) return;
     container.innerHTML = '';
+    
+    if (allVideos.length === 0) {
+        container.innerHTML = '<div class="loading">لا توجد فيديوهات بعد</div>';
+        return;
+    }
+    
     allVideos.forEach(video => {
         const isLiked = video.likedBy && video.likedBy[currentUser?.uid];
-        const user = allUsers[video.sender] || { username: video.senderName || 'user', avatar: '' };
+        const user = allUsers[video.sender] || { username: video.senderName || 'user', avatarUrl: '', avatar: '' };
         const isFollowing = currentUserData?.following && currentUserData.following[video.sender];
+        const commentsCount = video.comments ? Object.keys(video.comments).length : 0;
+        const captionWithHashtags = addHashtags(video.description || '');
+        
         const div = document.createElement('div');
-        div.className = 'video-segment';
+        div.className = 'video-item';
+        div.setAttribute('data-video-id', video.id);
         div.innerHTML = `
             <video loop playsinline muted data-src="${video.url}" poster="${video.thumbnail || ''}"></video>
             <div class="video-info">
-                <div class="video-author">
-                    <div class="author-avatar" onclick="viewProfile('${video.sender}')">${user.avatar || user.username?.charAt(0) || '👤'}</div>
-                    <div><span class="author-name" onclick="viewProfile('${video.sender}')">@${user.username || 'user'}</span>
-                    ${currentUser?.uid !== video.sender ? `<button class="follow-btn" onclick="toggleFollow('${video.sender}', this)">${isFollowing ? 'متابع' : 'متابعة'}</button>` : ''}</div>
+                <div class="author-info">
+                    <div class="author-avatar" onclick="viewProfile('${video.sender}')">${user.avatarUrl ? `<img src="${user.avatarUrl}">` : (user.avatar || user.username?.charAt(0) || '👤')}</div>
+                    <div>
+                        <span class="author-name" onclick="viewProfile('${video.sender}')">@${user.username}</span>
+                        ${currentUser?.uid !== video.sender ? `<button class="follow-btn" onclick="toggleFollow('${video.sender}', this)">${isFollowing ? 'متابع' : 'متابعة'}</button>` : ''}
+                    </div>
                 </div>
-                <div class="video-desc">${video.description || ''}</div>
+                <div class="video-caption">${captionWithHashtags}</div>
                 <div class="video-music"><i class="fas fa-music"></i> ${video.music || 'Original Sound'}</div>
             </div>
-            <div class="side-controls">
-                <div class="glass-btn" onclick="toggleMute(this)"><i class="fas fa-volume-mute"></i></div>
-                <div class="glass-btn ${isLiked ? 'neon-text' : ''}" onclick="toggleLike('${video.id}', this)"><i class="fas fa-heart"></i><span class="text-xs">${video.likes || 0}</span></div>
-                <div class="glass-btn" onclick="openComments('${video.id}')"><i class="fas fa-comment"></i><span class="text-xs">${Object.keys(video.comments || {}).length || 0}</span></div>
-                <div class="glass-btn" onclick="shareVideo('${video.url}')"><i class="fas fa-share"></i></div>
+            <div class="side-actions">
+                <button class="side-btn" onclick="toggleGlobalMute()">
+                    <i class="fas ${isMuted ? 'fa-volume-mute' : 'fa-volume-up'}"></i>
+                </button>
+                <button class="side-btn like-btn ${isLiked ? 'active' : ''}" onclick="toggleLike('${video.id}', this)">
+                    <i class="fas fa-heart"></i>
+                    <span>${video.likes || 0}</span>
+                </button>
+                <button class="side-btn" onclick="openComments('${video.id}')">
+                    <i class="fas fa-comment"></i>
+                    <span>${commentsCount}</span>
+                </button>
+                <button class="side-btn" onclick="openShare('${video.url}')">
+                    <i class="fas fa-share"></i>
+                </button>
             </div>
         `;
+        
+        // إضافة حدث الضغط مرتين للإعجاب
+        const videoEl = div.querySelector('video');
+        videoEl.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            const likeBtn = div.querySelector('.like-btn');
+            if (likeBtn) {
+                toggleLike(video.id, likeBtn);
+                showHeartAnimation(e.clientX, e.clientY);
+            }
+        });
+        
         container.appendChild(div);
     });
     initVideoObserver();
+}
+
+function showHeartAnimation(x, y) {
+    const heart = document.createElement('div');
+    heart.className = 'heart-animation';
+    heart.innerHTML = '❤️';
+    heart.style.left = x + 'px';
+    heart.style.top = y + 'px';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 800);
 }
 
 function initVideoObserver() {
@@ -121,14 +186,14 @@ function initVideoObserver() {
             }
         });
     }, { threshold: 0.65 });
-    document.querySelectorAll('.video-segment').forEach(seg => observer.observe(seg));
+    document.querySelectorAll('.video-item').forEach(seg => observer.observe(seg));
 }
 
-let isMuted = true;
-function toggleMute(btn) {
+function toggleGlobalMute() {
     isMuted = !isMuted;
     document.querySelectorAll('video').forEach(v => v.muted = isMuted);
-    btn.querySelector('i').className = isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+    const btns = document.querySelectorAll('.side-actions .side-btn:first-child i');
+    btns.forEach(btn => btn.className = isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up');
 }
 
 // ========== الإعجاب ==========
@@ -148,7 +213,7 @@ async function toggleLike(videoId, btn) {
         await addNotification(video.sender, 'like', currentUser.uid);
     }
     await videoRef.update({ likes, likedBy });
-    btn.classList.toggle('neon-text');
+    btn.classList.toggle('active');
     btn.querySelector('span').innerText = likes;
 }
 
@@ -169,9 +234,8 @@ async function toggleFollow(userId, btn) {
         btn.innerText = 'متابع';
         await addNotification(userId, 'follow', currentUser.uid);
     }
-    if (currentUserData) {
-        if (currentUserData.following) currentUserData.following[userId] = !currentUserData.following[userId];
-        else currentUserData.following = { [userId]: true };
+    if (viewingProfileUserId === userId) {
+        loadProfileData(userId);
     }
 }
 
@@ -185,11 +249,11 @@ async function openComments(videoId) {
     const container = document.getElementById('commentsList');
     container.innerHTML = '';
     Object.values(comments).reverse().forEach(c => {
-        const user = allUsers[c.userId] || { username: c.username || 'user', avatar: '' };
+        const user = allUsers[c.userId] || { username: c.username || 'user', avatarUrl: '' };
         container.innerHTML += `
             <div class="comment-item">
-                <div class="comment-avatar">${user.avatar || user.username?.charAt(0) || '👤'}</div>
-                <div class="comment-content"><div class="comment-username">@${user.username}</div><div class="comment-text">${c.text}</div><div class="comment-time">${new Date(c.timestamp).toLocaleString()}</div></div>
+                <div class="comment-avatar">${user.avatarUrl ? `<img src="${user.avatarUrl}">` : (user.username?.charAt(0) || '👤')}</div>
+                <div><div class="font-bold">@${user.username}</div><div class="text-sm">${c.text}</div></div>
             </div>
         `;
     });
@@ -204,10 +268,30 @@ async function addComment() {
     const commentsRef = db.ref(`videos/${currentVideoId}/comments`);
     const newComment = { userId: currentUser.uid, username: currentUserData?.username, text: input.value, timestamp: Date.now() };
     await commentsRef.push(newComment);
-    await addNotification(allVideos.find(v => v.id === currentVideoId)?.sender, 'comment', currentUser.uid);
+    const video = allVideos.find(v => v.id === currentVideoId);
+    if (video && video.sender !== currentUser.uid) {
+        await addNotification(video.sender, 'comment', currentUser.uid);
+    }
     input.value = '';
     openComments(currentVideoId);
 }
+
+// ========== المشاركة ==========
+function openShare(videoUrl) {
+    currentShareUrl = videoUrl;
+    document.getElementById('sharePanel').classList.add('open');
+}
+function closeShare() { document.getElementById('sharePanel').classList.remove('open'); }
+function copyLink() { 
+    navigator.clipboard.writeText(currentShareUrl); 
+    const toast = document.getElementById('copyToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+    closeShare();
+}
+function shareToWhatsApp() { window.open(`https://wa.me/?text=${encodeURIComponent(currentShareUrl)}`, '_blank'); closeShare(); }
+function shareToTelegram() { window.open(`https://t.me/share/url?url=${encodeURIComponent(currentShareUrl)}`, '_blank'); closeShare(); }
+function downloadVideo() { window.open(currentShareUrl, '_blank'); closeShare(); }
 
 // ========== الإشعارات ==========
 async function addNotification(targetUserId, type, fromUserId) {
@@ -217,14 +301,6 @@ async function addNotification(targetUserId, type, fromUserId) {
     await db.ref(`notifications/${targetUserId}`).push({ type, fromUserId, fromUsername: fromUser.username, message: messages[type], timestamp: Date.now(), read: false });
 }
 
-db.ref(`notifications/${currentUser?.uid}`).on('value', (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
-    const unread = Object.values(data).filter(n => !n.read).length;
-    const notifBtn = document.querySelector('.fa-bell');
-    if (notifBtn && unread > 0) notifBtn.classList.add('neon-text');
-});
-
 async function openNotifications() {
     const panel = document.getElementById('notificationsPanel');
     const container = document.getElementById('notificationsList');
@@ -232,39 +308,104 @@ async function openNotifications() {
     const notifs = snapshot.val() || {};
     container.innerHTML = '';
     Object.values(notifs).reverse().forEach(n => {
-        container.innerHTML += `<div class="notification-item"><i class="fas ${n.type === 'like' ? 'fa-heart text-red-500' : n.type === 'comment' ? 'fa-comment text-green-500' : 'fa-user-plus text-blue-500'}"></i><div><div>${n.fromUsername}</div><div class="text-xs opacity-60">${n.message}</div></div></div>`;
+        container.innerHTML += `<div class="notification-item"><i class="fas ${n.type === 'like' ? 'fa-heart text-red-500' : n.type === 'comment' ? 'fa-comment' : 'fa-user-plus'}"></i><div><div>${n.fromUsername}</div><div class="text-xs opacity-60">${n.message}</div></div></div>`;
         if (!n.read) db.ref(`notifications/${currentUser.uid}/${Object.keys(notifs).find(k => notifs[k] === n)}/read`).set(true);
     });
     panel.classList.add('open');
 }
-
 function closeNotifications() { document.getElementById('notificationsPanel').classList.remove('open'); }
 
 // ========== البحث ==========
 function openSearch() { document.getElementById('searchPanel').classList.add('open'); }
 function closeSearch() { document.getElementById('searchPanel').classList.remove('open'); }
-
 function searchUsers() {
     const query = document.getElementById('searchInput').value.toLowerCase();
     const resultsDiv = document.getElementById('searchResults');
-    const videosDiv = document.getElementById('searchVideosResults');
-    if (!query) { resultsDiv.innerHTML = ''; videosDiv.innerHTML = ''; return; }
+    if (!query) { resultsDiv.innerHTML = ''; return; }
     const users = Object.values(allUsers).filter(u => u.username.toLowerCase().includes(query));
-    const videos = allVideos.filter(v => v.description?.toLowerCase().includes(query) || allUsers[v.sender]?.username?.toLowerCase().includes(query));
-    resultsDiv.innerHTML = users.map(u => `<div class="search-result" onclick="viewProfile('${u.uid}')"><div class="w-10 h-10 rounded-full bg-gradient-to-r from-[#fe2c55] to-[#ff6b6b] flex items-center justify-center">${u.avatar || u.username.charAt(0)}</div><div>@${u.username}</div></div>`).join('');
-    videosDiv.innerHTML = videos.map(v => `<div class="search-result" onclick="playVideo('${v.url}')"><i class="fas fa-video"></i><div>${v.description || 'فيديو'}</div></div>`).join('');
+    resultsDiv.innerHTML = users.map(u => `<div class="search-result" onclick="viewProfile('${u.uid}')"><div class="search-avatar">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.username.charAt(0) || '👤')}</div><div>@${u.username}</div></div>`).join('');
 }
 
-function playVideo(url) { window.open(url, '_blank'); }
+// ========== رفع الصورة الشخصية ==========
+function changeAvatar() {
+    document.getElementById('avatarInput').click();
+}
+
+async function uploadAvatar(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+    const data = await res.json();
+    const avatarUrl = data.secure_url;
+    
+    await db.ref(`users/${currentUser.uid}/avatarUrl`).set(avatarUrl);
+    currentUserData.avatarUrl = avatarUrl;
+    updateAvatarDisplay();
+    if (viewingProfileUserId === currentUser.uid) loadProfileData(currentUser.uid);
+}
 
 // ========== الملف الشخصي ==========
-function openProfile() {
-    document.getElementById('profilePanel').style.display = 'block';
-    loadProfileVideos();
-    loadUserData();
+async function viewProfile(userId) {
+    if (!userId) return;
+    viewingProfileUserId = userId;
+    await loadProfileData(userId);
+    document.getElementById('profilePanel').classList.add('open');
 }
-function closeProfile() { document.getElementById('profilePanel').style.display = 'none'; }
-function openEditProfile() { document.getElementById('editProfilePanel').classList.add('open'); closeProfile(); }
+
+async function loadProfileData(userId) {
+    const userSnap = await db.ref(`users/${userId}`).get();
+    const user = userSnap.val();
+    if (!user) return;
+    
+    const avatarDisplay = document.getElementById('profileAvatarDisplay');
+    if (user.avatarUrl) {
+        avatarDisplay.innerHTML = `<img src="${user.avatarUrl}">`;
+    } else {
+        avatarDisplay.innerHTML = user.username?.charAt(0) || '👤';
+    }
+    
+    document.getElementById('profileNameDisplay').innerText = user.username;
+    document.getElementById('profileBioDisplay').innerText = user.bio || '';
+    document.getElementById('profileFollowing').innerText = Object.keys(user.following || {}).length;
+    document.getElementById('profileFollowers').innerText = Object.keys(user.followers || {}).length;
+    
+    const userVideos = allVideos.filter(v => v.sender === userId);
+    const totalLikes = userVideos.reduce((sum, v) => sum + (v.likes || 0), 0);
+    document.getElementById('profileLikes').innerText = totalLikes;
+    
+    const container = document.getElementById('profileVideosList');
+    container.innerHTML = userVideos.map(v => `<div class="video-thumb" onclick="playVideo('${v.url}')"><i class="fas fa-play"></i></div>`).join('');
+    
+    const actionsDiv = document.getElementById('profileActions');
+    if (userId === currentUser?.uid) {
+        actionsDiv.innerHTML = `<button class="edit-profile-btn" onclick="openEditProfile()">تعديل الملف</button><button class="logout-btn" onclick="logout()">تسجيل خروج</button>`;
+    } else {
+        const isFollowing = currentUserData?.following && currentUserData.following[userId];
+        actionsDiv.innerHTML = `<button class="follow-btn" style="padding:10px 30px" onclick="toggleFollow('${userId}', this)">${isFollowing ? 'متابع' : 'متابعة'}</button>`;
+    }
+}
+
+function openProfile(userId) { viewProfile(userId); }
+function closeProfile() { 
+    document.getElementById('profilePanel').classList.remove('open');
+    viewingProfileUserId = null;
+}
+function openEditProfile() { 
+    const editAvatar = document.getElementById('editAvatarDisplay');
+    if (currentUserData?.avatarUrl) {
+        editAvatar.innerHTML = `<img src="${currentUserData.avatarUrl}">`;
+    } else {
+        editAvatar.innerHTML = currentUserData?.username?.charAt(0) || '👤';
+    }
+    document.getElementById('editUsername').value = currentUserData?.username || '';
+    document.getElementById('editBio').value = currentUserData?.bio || '';
+    document.getElementById('editProfilePanel').classList.add('open');
+}
 function closeEditProfile() { document.getElementById('editProfilePanel').classList.remove('open'); }
 
 async function saveProfile() {
@@ -274,45 +415,48 @@ async function saveProfile() {
     currentUserData.username = newUsername;
     currentUserData.bio = newBio;
     closeEditProfile();
-    loadUserData();
+    if (viewingProfileUserId === currentUser.uid) loadProfileData(currentUser.uid);
     renderVideos();
 }
 
-function changeAvatar() { alert('سيتم إضافة رفع الصور قريباً'); }
-
-function viewProfile(userId) {
-    if (userId === currentUser?.uid) openProfile();
-    else window.location.href = `?profile=${userId}`;
-}
-
-async function loadProfileVideos() {
-    const container = document.getElementById('profileVideosList');
-    const userVideos = allVideos.filter(v => v.sender === currentUser?.uid);
-    container.innerHTML = userVideos.map(v => `<div class="aspect-[9/16] bg-gray-800 rounded-lg flex items-center justify-center cursor-pointer" onclick="playVideo('${v.url}')"><i class="fas fa-play text-2xl"></i></div>`).join('');
-    document.getElementById('profileVideos').innerText = userVideos.length;
-}
+function playVideo(url) { window.open(url, '_blank'); }
 
 // ========== رفع الفيديو ==========
-const widget = cloudinary.createUploadWidget({ cloudName: CLOUD_NAME, uploadPreset: UPLOAD_PRESET, sources: ['local'], clientAllowedFormats: ["mp4", "mov", "webm"] }, (err, result) => {
+const widget = cloudinary.createUploadWidget({ 
+    cloudName: CLOUD_NAME, 
+    uploadPreset: UPLOAD_PRESET, 
+    sources: ['local'], 
+    clientAllowedFormats: ["mp4", "mov", "webm"] 
+}, (err, result) => {
     if (!err && result.event === "success") {
-        const desc = prompt('وصف الفيديو:') || '';
+        const desc = prompt('وصف الفيديو (استخدم # للهاشتاق):') || '';
         const music = prompt('اسم الصوت:') || 'Original Sound';
-        db.ref('videos/').push({ url: result.info.secure_url, thumbnail: result.info.secure_url.replace('.mp4', '.jpg'), description: desc, music: music, sender: currentUser.uid, senderName: currentUserData?.username, likes: 0, likedBy: {}, comments: {}, timestamp: Date.now() });
+        db.ref('videos/').push({ 
+            url: result.info.secure_url, 
+            thumbnail: result.info.secure_url.replace('.mp4', '.jpg'), 
+            description: desc, 
+            music: music, 
+            sender: currentUser.uid, 
+            senderName: currentUserData?.username, 
+            likes: 0, 
+            likedBy: {}, 
+            comments: {}, 
+            timestamp: Date.now() 
+        });
         alert('✅ تم رفع الفيديو بنجاح!');
     }
 });
-document.getElementById("upload-trigger").onclick = () => widget.open();
-
-function shareVideo(url) { navigator.share ? navigator.share({ url }) : navigator.clipboard.writeText(url) && alert('تم نسخ الرابط'); }
+function openUpload() { widget.open(); }
 
 function switchTab(tab) {
     document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
-    event.target.closest('.nav-item').classList.add('active');
+    if (event.target.closest('.nav-item')) event.target.closest('.nav-item').classList.add('active');
     if (tab === 'search') openSearch();
     if (tab === 'notifications') openNotifications();
     if (tab === 'home') { closeSearch(); closeNotifications(); closeProfile(); }
 }
 
+// ========== مراقبة المستخدم ==========
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
@@ -328,4 +472,4 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-db.ref('presence').on('value', (s) => { document.getElementById('live-visitors') && (document.getElementById('live-visitors').innerText = s.numChildren()); });
+console.log('✅ TikTok Clone Ultra Plus Ready');
