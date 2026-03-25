@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SHΔDØW | GENESIS X</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&family=Cairo:wght@400;700&display=swap');
+        
+        :root { --neon-color: #00f3ff; --void-bg: #000000; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--void-bg); color: #fff; overflow: hidden; font-family: 'Cairo', sans-serif; user-select: none; }
+        
+        /* محرك التمرير - الحفاظ على الهيكل */
+        .scroll-engine { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; transition: 0.5s; }
+        .scroll-engine::-webkit-scrollbar { display: none; }
+        
+        /* حاوية الفيديو مع تأثير الثقب الأسود (Void Effect) */
+        .video-segment { 
+            height: 100vh; 
+            width: 100vw; 
+            scroll-snap-align: start; 
+            position: relative; 
+            background: var(--void-bg); 
+            overflow: hidden;
+            /* تطبيق تأثير التلاشي للأطراف */
+            -webkit-mask-image: radial-gradient(circle, black 40%, transparent 80%);
+            mask-image: radial-gradient(circle, black 40%, transparent 80%);
+        }
+        
+        video { width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+
+        /* واجهة زجاجية متطورة */
+        .glass-ui { background: rgba(0,0,0,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .neon-border { border-color: var(--neon-color) !important; box-shadow: 0 0 15px rgba(0,243,255,0.5); }
+        .neon-text { color: var(--neon-color) !important; text-shadow: 0 0 10px var(--neon-color); }
+
+        /* شريط XP */
+        .xp-bar-container { position: fixed; top: 70px; left: 20px; width: 120px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; z-index: 150; }
+        #xp-progress { height: 100%; width: 0%; background: var(--neon-color); border-radius: 10px; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--neon-color); }
+
+        /* القائمة الجانبية المعدلة - تشمل زر الرفع المحسن */
+        .side-controls { 
+            position: absolute; 
+            left: 20px; 
+            bottom: 120px; /* مرتفعة قليلاً فوق البار السفلي والدردشة */
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            z-index: 100; 
+        }
+        
+        .glass-btn { width: 45px; height: 45px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
+        .glass-btn:active { scale: 0.9; background: rgba(255,255,255,0.1); }
+        
+        /* تحسين زر الرفع المباشر */
+        #upload-trigger-improved {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.3);
+            border: none;
+        }
+        #upload-trigger-improved:hover { box-shadow: 0 0 20px rgba(255,255,255,0.6); }
+
+        .shuffle-btn { position: fixed; top: 80px; right: 20px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 100; border: 1px solid rgba(0,243,255,0.3); cursor: pointer; }
+
+        .video-info { position: absolute; bottom: 110px; right: 20px; text-align: right; pointer-events: none; z-index: 90; max-width: 70%; }
+
+        /* العلامة المائية - الحفاظ عليها */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.04);
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 5;
+            user-select: none;
+        }
+
+        /* لوحة التحكم المحسنة */
+        .admin-panel { position: fixed; inset: 0; z-index: 1000; background: #030303; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
+        .admin-card { background: #080808; border: 1px solid #1a1a1a; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 15px; margin-bottom: 12px; transition: 0.3s; }
+        .admin-card:hover { border-color: #333; background: #0a0a0a; }
+
+        /* تحسين الدردشة السفلية (Bottom Sheet) */
+        #chat-protocol-v4 {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60vh; /* تأخذ نصف الشاشة تقريباً */
+            z-index: 400;
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+        #chat-protocol-v4.open { transform: translateY(0); }
+        
+        #chat-box-v4 { flex-1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scrollbar-width: none; }
+        #chat-box-v4::-webkit-scrollbar { display: none; }
+
+        .chat-bubble { max-w-[85%]; p-3; rounded-xl; border; position: relative; }
+        .chat-bubble.me { mr-auto; bg-cyan-950/40; border-cyan-800/50; border-br-none; }
+        .chat-bubble.them { ml-auto; bg-neutral-900; border-neutral-800; border-bl-none; }
+
+        .chat-input-area { p-4; display: flex; gap: 10px; border-t border-white/5; background: rgba(5,5,5,0.8); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body>
+
+    <header class="fixed top-0 w-full z-[200] glass-ui p-4 flex justify-between items-center border-b border-white/5">
+        <div class="flex flex-col">
+            <span id="user-level" class="text-[9px] font-[Orbitron] neon-text tracking-widest">LEVEL 1 [INITIATE]</span>
+            <div class="xp-bar-container"><div id="xp-progress"></div></div>
+        </div>
+        <h1 class="text-xl font-black italic font-[Orbitron] tracking-tighter text-white">SHΔDØW<span class="neon-text">_X</span></h1>
+        <i class="fas fa-comment-code text-sm opacity-20 hover:opacity-100 hover:neon-text cursor-pointer transition-all" onclick="checkAdminAuth()"></i>
+    </header>
+
+    <div class="shuffle-btn glass-ui" onclick="shuffleProtocol()">
+        <i class="fas fa-bolt text-xs neon-text"></i>
+    </div>
+
+    <main class="scroll-engine" id="video-stack">
+        <div class="h-full flex flex-col items-center justify-center bg-black">
+            <i class="fas fa-atom fa-spin text-4xl neon-text mb-5"></i>
+            <span class="loading-text text-[11px] font-[Orbitron] animate-pulse tracking-widest">SYNCHRONIZING_CORE_vX...</span>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 w-full h-20 glass-ui border-t border-white/5 flex justify-around items-center z-[200] px-5 pb-2">
+        <i class="fas fa-ghost neon-text text-2xl"></i>
+        <button class="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10" onclick="toggleChatV4()">
+            <i class="fas fa-terminal opacity-60 text-xs"></i>
+            <span class="text-xs text-white/70">COMMS</span>
+        </button>
+        <i class="fas fa-puredash opacity-60 hover:opacity-100 transition-opacity text-xl" onclick="shuffleProtocol()"></i>
+    </nav>
+
+    <div class="side-controls">
+        <div id="upload-trigger-improved" class="glass-btn" title="UPLINK NEW DATA">
+            <i class="fas fa-plus text-lg"></i>
+        </div>
+        <div id="dynamic-side-controls" class="flex flex-col gap-4"></div>
+    </div>
+
+    <div id="chat-protocol-v4" class="glass-ui">
+        <div class="p-4 flex justify-between items-center border-b border-white/5 bg-black/30">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span class="neon-text font-[Orbitron] text-xs tracking-widest">SECURE_COMMS_v4.0</span>
+            </div>
+            <i class="fas fa-times-circle cursor-pointer text-xl opacity-50 hover:opacity-100 transition-opacity" onclick="toggleChatV4()"></i>
+        </div>
+        
+        <div id="chat-box-v4">
+            </div>
+        
+        <div class="chat-input-area">
+            <input type="text" id="msg-input-v4" class="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 outline-none focus:border-[#00f3ff]/50 transition-colors text-sm text-white placeholder:text-white/20" placeholder="Type encrypted message..." onkeypress="handleKey(event)">
+            <button onclick="sendChat()" class="neon-text w-12 h-12 flex items-center justify-center bg-[#00f3ff]/10 rounded-xl hover:scale-105 active:scale-95 transition-transform">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="admin-overlay" class="admin-panel">
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-white/10">
+            <div class="flex flex-col">
+                <h2 class="text-xl font-bold neon-text font-[Orbitron]">CORE_CONTROL</h2>
+                <span class="text-[10px] text-gray-500">Video Data Management</span>
+            </div>
+            <button onclick="toggleAdmin()" class="bg-red-950 text-red-300 border border-red-800 px-5 py-2 rounded-xl text-xs font-bold hover:bg-red-900 transition-colors">DISCONNECT</button>
+        </div>
+        <div id="admin-list" class="space-y-2">
+            </div>
+    </div>
+
+    <script>
+        // التكوين الأمني والروابط
+        const ADMIN_PASS = "1234"; // كلمة السر المطلوبة
+        const AD_LINKS = [
+            "https://www.effectivegatecpm.com/bxwxuk2f39?key=566216691dc8b76a740840e94f68f44c",
+            "https://www.effectivegatecpm.com/k60w64w4gk?key=564f3d8cc4ac85949f218179b742495e"
+        ];
+        let currentAd = 0;
+
+        // معرف المستخدم ونظام XP - الحفاظ عليه
+        const SHADOW_ID = localStorage.getItem('shadow_uid') || 'UX_' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        localStorage.setItem('shadow_uid', SHADOW_ID);
+        let userXP = parseInt(localStorage.getItem('shadow_xp')) || 0;
+
+        // تهيئة Firebase - الحفاظ عليه
+        const firebaseConfig = { databaseURL: "https://project-717e4-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // دالة الإعلانات - الحفاظ عليها
+        function triggerAd() {
+            window.open(AD_LINKS[currentAd], '_blank');
+            currentAd = (currentAd + 1) % AD_LINKS.length;
+            addXP(10);
+        }
+
+        // نظام XP - الحفاظ عليه
+        function addXP(amount) {
+            userXP += amount;
+            localStorage.setItem('shadow_xp', userXP);
+            updateXPUI();
+        }
+
+        function updateXPUI() {
+            const level = Math.floor(userXP / 500) + 1;
+            const progress = (userXP % 500) / 5;
+            const titles = ["RECRUIT", "OPERATIVE", "ELITE", "PHANTOM", "SHΔDØW_MASTER"];
+            const lvlEl = document.getElementById('user-level');
+            if(lvlEl) lvlEl.innerText = `LVL ${level} // ${titles[Math.min(level-1, 4)]}`;
+            const progEl = document.getElementById('xp-progress');
+            if(progEl) progEl.style.width = progress + "%";
+        }
+        updateXPUI();
+
+        // مزامنة الفيديوهات وبناء الواجهة - الحفاظ على المنطق مع تعديل الحقن
+        db.ref('videos').on('value', (snapshot) => {
+            const container = document.getElementById('video-stack');
+            const adminList = document.getElementById('admin-list');
+            const data = snapshot.val();
+            container.innerHTML = '';
+            adminList.innerHTML = '';
+            if(!data) {
+                container.innerHTML = '<div class="h-full flex items-center justify-center text-white/30 text-xs tracking-widest">NO_DATA_STREAM</div>';
+                return;
+            }
+            
+            const sorted = Object.keys(data).map(id => ({ id, ...data[id] })).sort((a, b) => b.timestamp - a.timestamp);
+            
+            sorted.forEach((vid, index) => {
+                // إنشاء مقطع الفيديو مع تأثير الـ Void
+                const section = document.createElement('section');
+                section.className = 'video-segment';
+                section.setAttribute('data-vid-id', vid.id);
+                
+                const isLiked = vid.likedBy && vid.likedBy[SHADOW_ID];
+                
+                section.innerHTML = `
+                    <div class="watermark">SHΔDØW GENESIS X</div>
+                    <video loop playsinline preload="metadata" src="${vid.url}" onclick="togglePlay(this)"></video>
+                    <div class="video-info">
+                        <div class="text-[10px] opacity-40 mb-1 font-[Orbitron]">SOURCE: ${vid.sender || 'UNKNOWN'}</div>
+                        <div class="text-xs font-bold tracking-tighter neon-text font-[Orbitron]">PROTOCOL_${vid.id.substr(-4)}</div>
+                    </div>
+                `;
+                container.appendChild(section);
+
+                // بناء كرت الإدارة في لوحة التحكم - تحسين التصميم
+                const card = document.createElement('div');
+                card.className = 'admin-card';
+                card.innerHTML = `
+                    <video class="w-16 h-16 object-cover rounded-lg border border-white/10" src="${vid.url}" muted></video>
+                    <div class="flex-1 flex flex-col gap-1">
+                        <div class="text-[10px] text-cyan-400 font-[Orbitron]">${vid.id}</div>
+                        <div class="text-[9px] text-gray-600">BY: ${vid.sender}</div>
+                        <div class="text-[9px] text-gray-600">${new Date(vid.timestamp).toLocaleString('ar-EG')}</div>
+                    </div>
+                    <button onclick="deleteVideo('${vid.id}')" class="text-red-500 p-3 bg-red-950/30 rounded-full hover:bg-red-950 transition-colors"><i class="fas fa-trash-alt text-sm"></i></button>
+                `;
+                adminList.appendChild(card);
+            });
+            initScroll(); // إعادة تهيئة المراقب عند تحميل البيانات
+        });
+
+        // التحكم في التشغيل - الحفاظ عليه
+        function togglePlay(v) {
+            if (v.paused) v.play().catch(()=>{});
+            else v.pause();
+        }
+
+        // بروتوكول الخلط - الحفاظ عليه
+        function shuffleProtocol() {
+            const sections = document.querySelectorAll('.video-segment');
+            if(sections.length > 1) {
+                const randomIdx = Math.floor(Math.random() * sections.length);
+                sections[randomIdx].scrollIntoView({ behavior: 'smooth' });
+                addXP(5);
+            }
+        }
+
+        // التفاعل مع الفيديو (Like, Share)
+        function toggleLike(vId) {
+            triggerAd();
+            addXP(5);
+            db.ref(`videos/${vId}`).transaction(p => {
+                if (p) {
+                    if (!p.likedBy) p.likedBy = {};
+                    if (p.likedBy[SHADOW_ID]) { p.likes = (p.likes || 1) - 1; delete p.likedBy[SHADOW_ID]; }
+                    else { p.likes = (p.likes || 0) + 1; p.likedBy[SHADOW_ID] = true; }
+                }
+                return p;
+            });
+        }
+
+        function shareVideoWithAd() {
+            triggerAd();
+            const currentVidId = document.querySelector('.video-segment.active-void')?.getAttribute('data-vid-id');
+            navigator.share({ title: 'SHΔDØW GENESIS X', url: window.location.href + '?v=' + currentVidId }).catch(() => {});
+            addXP(10);
+        }
+
+        // ودجت الرفع - الحفاظ عليه وربطه بالزر الجديد المحسن
+        const myWidget = cloudinary.createUploadWidget({ 
+            cloudName: "dssk5tabb", 
+            uploadPreset: "bjebvo5p", 
+            sources: ['local', 'camera'],
+            clientAllowedFormats: ["mp4", "mov", "avi", "webm"],
+            maxFileSize: 50000000, // 50MB max
+            styles: { palette: { window: "#000000", sourceBg: "#000000", windowBorder: "#00f3ff", tabIcon: "#00f3ff", inactiveTabIcon: "#004444", menuIcons: "#00f3ff", link: "#00f3ff", action: "#00f3ff", activeTabIcon: "#ffffff", textDark: "#000000", textLight: "#ffffff" } }
+        }, (err, res) => {
+            if (!err && res.event === "success") {
+                db.ref('videos/').push({ 
+                    url: res.info.secure_url, 
+                    sender: SHADOW_ID, 
+                    likes: 0, 
+                    timestamp: Date.now() 
+                });
+                addXP(150);
+                alert("UPLINK SUCCESSFUL. VIDEO CLONED TO VOID.");
+            }
+        });
+
+        // ربط زر الرفع المحسن
+        document.getElementById("upload-trigger-improved").onclick = () => { myWidget.open(); };
+
+        // --- تحسين نظام الدردشة السفلية الجديد ---
+        function toggleChatV4() { 
+            const c = document.getElementById('chat-protocol-v4'); 
+            c.classList.toggle('open');
+            if(c.classList.contains('open')) {
+                addXP(2);
+                document.getElementById('msg-input-v4').focus();
+            }
+        }
+
+        function sendChat() { 
+            const i = document.getElementById('msg-input-v4'); 
+            if(i.value.trim()){ 
+                db.ref('global_chat').push({user:SHADOW_ID, text:i.value, time: Date.now()}); 
+                i.value=''; 
+                addXP(3); 
+            } 
+        }
+
+        function handleKey(e) { if(e.key==='Enter') sendChat(); }
+
+        // استماع للدردشة وتنظيم الفقاعات - تحسين التصميم
+        db.ref('global_chat').limitToLast(30).on('value', s => {
+            const b = document.getElementById('chat-box-v4'); 
+            b.innerHTML = '';
+            const v = s.val(); 
+            if(v) Object.values(v).forEach(m => {
+                const isMe = m.user === SHADOW_ID;
+                const d = document.createElement('div'); 
+                d.className = `chat-bubble ${isMe ? 'me' : 'them'}`;
+                d.innerHTML = `
+                    <span class="text-[8px] font-[Orbitron] ${isMe ? 'neon-text' : 'text-gray-500'} block mb-1 tracking-wider">${m.user}</span>
+                    <p class="text-xs leading-relaxed text-white/90">${m.text}</p>
+                    <span class="text-[7px] text-white/20 absolute bottom-1 ${isMe ? 'left-2' : 'right-2'}">${new Date(m.time).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</span>
+                `;
+                b.appendChild(d);
+            });
+            b.scrollTop = b.scrollHeight; // سكرول لآخر رسالة
+        });
+
+        // --- لوحة التحكم وكلمة السر ---
+        function checkAdminAuth() {
+            // استخدام prompt لطلب كلمة السر (تحقيقاً للشرط بأبسط طريقة آمنة محلياً)
+            const pass = prompt("ENTER CORE_CONTROL KEY:");
+            if (pass === ADMIN_PASS) {
+                toggleAdmin();
+                addXP(20);
+            }
+            else if (pass !== null) {
+                alert("ACCESS DENIED. INTRUSION LOGGED.");
+                addXP(-50); // عقاب محاولة الدخول الخاطئ
+            }
+        }
+
+        function toggleAdmin() {
+            const a = document.getElementById('admin-overlay');
+            a.style.display = a.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function deleteVideo(id) {
+            if(confirm("PERMANENTLY DELETE THIS VIDEO FROM VOID?")) {
+                db.ref(`videos/${id}`).remove()
+                .then(() => alert("VIDEO TERMINATED."))
+                .catch(e => alert("ERROR: " + e.message));
+            }
+        }
+
+        // --- محرك المراقبة والتمرير - تحديث لدعم الأدوات الجانبية الديناميكية وتأثير الثقب الأسود ---
+        function updateSideControls(vId, isLiked, likesCount) {
+            const sideCon = document.getElementById('dynamic-side-controls');
+            sideCon.innerHTML = `
+                <div class="glass-btn ${isLiked ? 'neon-border neon-text' : 'text-white/60'}" onclick="toggleLike('${vId}')">
+                    <i class="fas fa-heart ${isLiked ? 'animate-bounce text-red-500' : ''}"></i>
+                    <span class="text-[10px] font-black mt-1">${likesCount || 0}</span>
+                </div>
+                <div class="glass-btn text-white/60" onclick="toggleChatV4()">
+                    <i class="fas fa-terminal"></i>
+                </div>
+                <div class="glass-btn text-white/60" onclick="shareVideoWithAd()">
+                    <i class="fas fa-arrow-up-right-from-square"></i>
+                </div>
+            `;
+        }
+
+        function initScroll() {
+            const obs = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    const v = e.target.querySelector('video');
+                    const vId = e.target.getAttribute('data-vid-id');
+                    
+                    if(e.isIntersecting) {
+                        e.target.classList.add('active-void'); // تمييز القسم النشط
+                        if(v) v.play().catch(()=>{});
+                        
+                        // تحديث الألوان النيونية عشوائياً عند التمرير
+                        const colors = ['#00f3ff', '#ff0055', '#00ffaa', '#ccff00', '#7000ff', '#ffaa00', '#ffffff'];
+                        document.documentElement.style.setProperty('--neon-color', colors[Math.floor(Math.random()*colors.length)]);
+                        
+                        // جلب بيانات اللايكات وتحديث الأزرار الجانبية لهذا الفيديو محددًا
+                        db.ref(`videos/${vId}`).on('value', snap => {
+                            const val = snap.val();
+                            if(val && e.target.classList.contains('active-void')) {
+                                const isLiked = val.likedBy && val.likedBy[SHADOW_ID];
+                                updateSideControls(vId, isLiked, val.likes);
+                            }
+                        });
+
+                    } else { 
+                        e.target.classList.remove('active-void');
+                        if(v) {
+                            v.pause(); 
+                            v.currentTime = 0; 
+                        }
+                        // إزالة الاستماع عند الخروج من العرض لتوفير الأداء
+                        db.ref(`videos/${vId}`).off();
+                    }
+                });
+            }, { threshold: 0.6 }); // يجب أن يظهر 60% من القسم لتنشيطه
+            
+            document.querySelectorAll('.video-segment').forEach(s => obs.observe(s));
+        }
+
+        // كتم الصوت الأولي وتفعيله بأول لمسة (متطلبات المتصفح)
+        document.addEventListener('touchstart', () => { 
+            document.querySelectorAll('video').forEach(v => v.muted = false); 
+        }, { once: true });
+        
+        // منع القائمة السياقية الافتراضية للحفاظ على الهوية
+        window.oncontextmenu = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        };
+    </script>
+</body>
+</html>
