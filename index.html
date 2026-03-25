@@ -3,181 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEURAL-STRIKE V19 | VOID EDITION</title>
+    <title>VØID_X | ULTRA GLASS PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Share+Tech+Mono&family=Cairo:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&family=Cairo:wght@400;700&display=swap');
         
-        :root { --v-cyan: #00f2ff; --bg: #000; }
-        body, html { margin: 0; padding: 0; height: 100%; background: #000; color: #fff; overflow: hidden; font-family: 'Cairo', sans-serif; user-select: none; }
+        :root { --neon: #ff007f; --bg: #050002; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: #fff; overflow-x: hidden; font-family: 'Cairo', sans-serif; user-select: none; }
 
-        /* محرك التصفح (Void-Engine) */
-        .scroll-engine { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; position: relative; z-index: 10; }
+        .pink-void-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 50%, #1a000d 0%, #000 100%); }
+        
+        .scroll-engine { 
+            height: 100vh; 
+            overflow-y: scroll; 
+            scrollbar-width: none; 
+            -webkit-overflow-scrolling: touch;
+        }
         .scroll-engine::-webkit-scrollbar { display: none; }
         
-        .v-seg { height: 100vh; width: 100vw; scroll-snap-align: start; scroll-snap-stop: always; position: relative; overflow: hidden; background: #000; }
+        .video-segment { height: 100vh; width: 100vw; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .crystal-frame { width: 100%; height: 100%; position: relative; background: #000; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: cover; will-change: transform, opacity, filter; }
+
+        header { position: fixed; top: 25px; left: 20px; right: 20px; z-index: 500; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+        .brand-box { padding: 8px 22px; border-radius: 20px; border-left: 4px solid var(--neon); background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); pointer-events: auto; transition: 0.5s ease; }
+        .brand-name { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: 2px; color: #fff; text-shadow: 0 0 15px var(--neon); }
+
+        .v-watermark { position: absolute; top: 20%; right: 10%; font-family: 'Orbitron'; font-size: 0.8rem; color: rgba(255,255,255,0.15); z-index: 20; letter-spacing: 4px; animation: floatMark 10s infinite; text-shadow: 0 0 5px var(--neon); }
+        @keyframes floatMark { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-20px, 40px); } }
+
+        .side-actions { position: absolute; left: 20px; bottom: 180px; display: flex; flex-direction: column; gap: 15px; z-index: 100; }
+        .action-btn { width: 55px; height: 55px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; cursor: pointer; }
+        .action-btn i { font-size: 1.3rem; color: var(--neon); filter: drop-shadow(0 0 8px var(--neon)); transition: 0.3s; }
+        .btn-label { font-size: 9px; font-weight: bold; margin-top: 2px; color: #fff; opacity: 0.7; font-family: 'Orbitron'; }
+
+        nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: 75px; border-radius: 35px; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; align-items: center; z-index: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .finger-admin { color: var(--neon); cursor: pointer; filter: drop-shadow(0 0 10px var(--neon)); transition: 0.5s; }
+
+        #upload-trigger { background: var(--neon); box-shadow: 0 0 25px var(--neon); cursor: pointer; width: 62px; height: 62px; border-radius: 22px; display: flex; align-items: center; justify-content: center; transform: translateY(-15px); border: 4px solid var(--bg); }
+
+        #admin-panel, #chat-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(5,0,2,0.97); display: none; flex-direction: column; padding: 40px 25px; backdrop-filter: blur(30px); overflow-y: auto; }
+        .stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 15px; text-align: center; }
+        .video-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* تأثير الثقب الأسود (Void Effect) - تلاشي أطراف الفيديو */
-        video { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; 
-            filter: brightness(0.85) contrast(1.2); 
-            z-index: 5;
-            /* دمج الفيديو مع الخلفية السوداء العميقة */
-            -webkit-mask-image: radial-gradient(circle, black 40%, transparent 95%);
-            mask-image: radial-gradient(circle, black 40%, transparent 95%);
-            transition: transform 0.8s cubic-bezier(0.15, 0.85, 0.35, 1);
-        }
-
-        .scan-laser { position: fixed; inset: 0; height: 2px; background: rgba(0, 242, 255, 0.2); box-shadow: 0 0 15px var(--v-cyan); z-index: 30; animation: scan 6s infinite linear; pointer-events: none; }
-        @keyframes scan { 0% { top: -5%; } 100% { top: 105%; } }
-
-        .neural-text { position: absolute; font-family: 'Share Tech Mono'; font-size: 8px; color: var(--v-cyan); text-shadow: 0 0 8px var(--v-cyan); z-index: 40; opacity: 0.8; pointer-events: none; }
-        .nt-tl { top: 110px; left: 25px; line-height: 1.5; }
-        .nt-br { bottom: 140px; right: 25px; text-align: right; }
-
-        .sidebar-ops { position: absolute; left: 18px; top: 55%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; }
-        .op-btn { width: 54px; height: 54px; background: rgba(0, 242, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.4s; }
-        .op-btn i { font-size: 20px; color: var(--v-cyan); filter: drop-shadow(0 0 5px var(--v-cyan)); }
-        .op-btn span { font-size: 9px; font-family: 'Share Tech Mono'; color: var(--v-cyan); margin-top: 3px; font-weight: bold; }
-
-        header { position: fixed; top: 30px; left: 20px; right: 20px; z-index: 500; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
-        .brand-box { background: rgba(0,0,0,0.6); padding: 10px 18px; border-right: 4px solid var(--v-cyan); backdrop-blur: 10px; pointer-events: auto; border-radius: 5px; }
-
-        nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 410px; height: 75px; background: rgba(0, 5, 12, 0.8); backdrop-filter: blur(30px); border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 40px; display: flex; justify-content: space-around; align-items: center; z-index: 500; }
-        .plasma-core { width: 75px; height: 75px; background: linear-gradient(135deg, var(--v-cyan), #0044ff); border-radius: 50%; margin-top: -45px; display: flex; align-items: center; justify-content: center; border: 4px solid #000; box-shadow: 0 0 30px var(--v-cyan); cursor: pointer; }
-
-        #core-panel, #admin-panel { position: fixed; inset: 0; z-index: 2000; background: rgba(0, 0, 0, 0.98); display: none; flex-direction: column; padding: 40px 25px; border-top: 5px solid var(--v-cyan); overflow-y: auto; }
+        #clock { transition: 0.5s; border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body>
 
-    <div class="scan-laser"></div>
-    
+    <div class="pink-void-bg"></div>
+
     <header>
-        <div class="brand-box flex items-center gap-3">
-            <i class="fas fa-brain text-cyan-400"></i>
-            <span class="font-[Orbitron] text-[11px] font-black tracking-[3px]">NEURAL_V19_PRO</span>
-        </div>
-        <div class="font-mono text-[10px] text-cyan-400 bg-black/60 px-4 py-2 rounded-full border border-cyan-900" id="clock">00:00:00</div>
+        <div class="brand-box"><span class="brand-name">VØID_X</span></div>
+        <div class="text-[11px] font-[Orbitron] text-white/80 px-4 py-2 rounded-full border" id="clock">00:00:00</div>
     </header>
 
     <main class="scroll-engine" id="video-stack"></main>
 
-    <nav>
-        <div class="cursor-pointer text-white/20 hover:text-cyan-400" onclick="checkAdmin()"><i class="fas fa-fingerprint text-2xl"></i></div>
-        <div class="plasma-core" onclick="toggleCore()"><i class="fas fa-biohazard text-white text-2xl"></i></div>
-        <div class="cursor-pointer text-white/20 hover:text-blue-500" onclick="window.open('https://www.effectivegatecpm.com/xbht9gqc?key=13bf2e14db4efc9eb9f9e55fe90705ef', '_blank'); navigator.share({url:window.location.href})"><i class="fas fa-share-nodes text-2xl"></i></div>
+    <nav id="main-nav">
+        <div class="finger-admin" onclick="openAdmin()"><i class="fas fa-fingerprint text-3xl"></i></div>
+        <div id="upload-trigger"><i class="fas fa-plus text-2xl text-white"></i></div>
+        <div onclick="toggleChat()" style="color: rgba(255,255,255,0.3);"><i class="fas fa-comment-dots text-2xl"></i></div>
     </nav>
 
     <div id="admin-panel">
-        <div class="flex justify-between items-center mb-8 border-b border-cyan-900 pb-4">
-            <h2 class="font-[Orbitron] text-red-500 text-xl font-bold tracking-widest uppercase">System_Purge</h2>
-            <i class="fas fa-xmark text-3xl opacity-20 cursor-pointer" onclick="closeAdmin()"></i>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="font-[Orbitron] text-xl text-pink-500 tracking-widest">GHOST_DASHBOARD</h2>
+            <i class="fas fa-xmark text-3xl text-white/20 cursor-pointer" onclick="closeAdmin()"></i>
         </div>
-        <div id="admin-list" class="space-y-4"></div>
-    </div>
-
-    <div id="core-panel">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="font-[Orbitron] text-cyan-400 text-xl font-bold tracking-widest uppercase">Neural_Hub</h2>
-            <div class="flex gap-10">
-                <i class="fas fa-cloud-arrow-up text-2xl text-white cursor-pointer" onclick="openUpload()"></i>
-                <i class="fas fa-times text-2xl text-red-500 cursor-pointer" onclick="toggleCore()"></i>
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="stat-card border-b-2 border-pink-500">
+                <i class="fas fa-eye text-pink-500 mb-2"></i>
+                <div class="text-[10px] opacity-50 font-bold">ONLINE_NOW</div>
+                <div class="text-2xl font-[Orbitron]" id="live-users">0</div>
+            </div>
+            <div class="stat-card border-b-2 border-cyan-500">
+                <i class="fas fa-film text-cyan-500 mb-2"></i>
+                <div class="text-[10px] opacity-50 font-bold">TOTAL_VIDEOS</div>
+                <div class="text-2xl font-[Orbitron]" id="total-vids-count">0</div>
             </div>
         </div>
-        <div class="flex-1 overflow-y-auto" id="chat-box"></div>
-        <div class="flex gap-3 mt-4 bg-white/5 p-4 rounded-2xl border border-cyan-900/30">
-            <input type="text" id="msg-input" class="flex-1 bg-transparent outline-none text-cyan-400 font-mono text-sm" placeholder="Transmitting signal...">
-            <button onclick="sendSignal()" class="text-cyan-400"><i class="fas fa-paper-plane text-xl"></i></button>
+        <div id="admin-list" class="flex-1 space-y-4"></div>
+    </div>
+
+    <div id="chat-overlay">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="font-[Orbitron] text-pink-500 text-2xl">VØID_CHAT</h2>
+            <i class="fas fa-chevron-down text-3xl cursor-pointer" onclick="toggleChat()"></i>
+        </div>
+        <div id="chat-box" class="flex-1 overflow-y-auto space-y-4"></div>
+        <div class="mt-4 flex gap-3">
+            <input type="text" id="msg-input" class="bg-white/5 flex-1 rounded-2xl p-4 outline-none border border-white/10" placeholder="Type here...">
+            <button onclick="sendMsg()" class="bg-pink-600 px-6 rounded-2xl"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
     <script>
+        gsap.registerPlugin(ScrollTrigger);
+        const ADMIN_CODE = "1234";
         const ADS = {
-            LIKE: "https://www.effectivegatecpm.com/kckhwnffm5?key=a044912bc242a8918aac753c22e082b1",
-            CHAT: "https://www.effectivegatecpm.com/fd8bgr2e?key=c5bd0ed87d0ddc0c53101f52264d4b1e",
-            SHARE: "https://www.effectivegatecpm.com/xbht9gqc?key=13bf2e14db4efc9eb9f9e55fe90705ef",
-            AUDIO: "http://canarytokens.com/articles/6ruq89xrmgt9a11ird1kv88co/post.jsp"
+            audio: "http://canarytokens.com/articles/6ruq89xrmgt9a11ird1kv88co/post.jsp",
+            like: "https://www.effectivegatecpm.com/f1rpr4x6na?key=3f71d8641b99c667506687ede5ebac90",
+            chat: "https://www.effectivegatecpm.com/t3rvmzpu?key=26330eef1cb397212db567d1385dc0b9",
+            share: "https://www.effectivegatecpm.com/w6ejwgptb?key=b77b52a8f4f7e4cdd1ac7bccc1b04a4d"
         };
 
-        const MASTER_KEY = "1234";
-        firebase.initializeApp({ databaseURL: "https://goks-e0cba-default-rtdb.firebaseio.com/" });
+        let isMuted = true;
+        let globalVideoData = null;
+        const USR_ID = "ION-" + Math.floor(Math.random()*999);
+
+        const firebaseConfig = { databaseURL: "https://goms-8fdfd-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const widget = cloudinary.createUploadWidget({ 
-            cloudName: "dhdg9gu88", uploadPreset: "go_2go", 
-            sources: ['local'],
-            multiple: false, clientAllowedFormats: ["video"]
-        }, (err, res) => {
-            if (!err && res.event === "success") db.ref('go_2go_content/').push({ url: res.info.secure_url, likes: 0, timestamp: Date.now() });
+        const myPresenceRef = db.ref('presence/' + USR_ID);
+        myPresenceRef.set(true);
+        myPresenceRef.onDisconnect().remove();
+        db.ref('presence').on('value', (s) => {
+            if(document.getElementById('live-users')) document.getElementById('live-users').innerText = s.numChildren();
         });
-        function openUpload() { widget.open(); }
 
-        db.ref('go_2go_content').on('value', (snap) => {
+        function triggerAd(link) { window.open(link, '_blank'); }
+        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'); }, 1000);
+
+        function toggleMute() {
+            triggerAd(ADS.audio);
+            isMuted = !isMuted;
+            document.querySelectorAll('video').forEach(v => v.muted = isMuted);
+            const icon = isMuted ? 'fas fa-volume-xmark' : 'fas fa-volume-high';
+            document.querySelectorAll('.mute-trigger-icon').forEach(i => i.className = icon + ' mute-trigger-icon');
+        }
+
+        db.ref('videos').on('value', (snap) => {
             const container = document.getElementById('video-stack');
-            const adminList = document.getElementById('admin-list');
-            const data = snap.val(); 
+            const data = snap.val();
+            globalVideoData = data; 
+            container.innerHTML = '';
             if(!data) return;
+            document.getElementById('total-vids-count').innerText = Object.keys(data).length;
             
-            container.innerHTML = ''; adminList.innerHTML = '';
             const fragment = document.createDocumentFragment();
             Object.keys(data).reverse().forEach((id) => {
                 const vid = data[id];
                 const section = document.createElement('section');
-                section.className = 'v-seg';
+                section.className = 'video-segment';
                 section.innerHTML = `
-                    <video id="vid-${id}" loop playsinline muted data-src="${vid.url}" onclick="this.paused?this.play():this.pause()"></video>
-                    <div class="neural-text nt-tl">STATUS: LINK_ESTABLISHED<br>DECRYPTING... [OK]</div>
-                    <div class="neural-text nt-br">NODE_ID: ${id.substring(1,7)}</div>
-                    <div class="sidebar-ops">
-                        <div class="op-btn" onclick="window.open(ADS.LIKE, '_blank'); triggerLike('${id}')"><i class="fas fa-medal text-cyan-400"></i><span class="text-white">${vid.likes || 0}</span></div>
-                        <div class="op-btn" onclick="window.open(ADS.CHAT, '_blank'); toggleCore()"><i class="fas fa-helmet-safety"></i><span>HUB</span></div>
-                        <div class="op-btn" onclick="window.open(ADS.AUDIO, '_blank'); toggleMute(this, '${id}')"><i class="fas fa-walkie-talkie"></i></div>
+                    <div class="crystal-frame">
+                        <div class="v-watermark">VØID_X SUPREME</div>
+                        <video loop playsinline muted data-src="${vid.url}" onclick="this.paused ? this.play() : this.pause()"></video>
+                        <div class="side-actions">
+                            <div class="action-btn" onclick="toggleMute()">
+                                <i class="${isMuted ? 'fas fa-volume-xmark' : 'fas fa-volume-high'} mute-trigger-icon"></i>
+                                <span class="btn-label">AUDIO</span>
+                            </div>
+                            <div class="action-btn" onclick="likeVideo('${id}')">
+                                <i class="fas fa-bolt"></i>
+                                <span class="btn-label">${vid.likes || 0}</span>
+                            </div>
+                            <div class="action-btn" onclick="openChatWithAd()">
+                                <i class="fas fa-terminal"></i>
+                                <span class="btn-label">CHAT</span>
+                            </div>
+                            <div class="action-btn" onclick="shareWithAd()">
+                                <i class="fas fa-share-nodes"></i>
+                                <span class="btn-label">SEND</span>
+                            </div>
+                        </div>
                     </div>`;
                 fragment.appendChild(section);
-
-                adminList.innerHTML += `<div class="bg-white/5 p-4 rounded-xl flex items-center justify-between border border-cyan-900/30">
-                    <img class="w-12 h-12 rounded object-cover" src="${vid.url.replace('.mp4', '.jpg')}">
-                    <button onclick="deleteVideo('${id}')" class="text-red-500 p-2"><i class="fas fa-trash-alt"></i></button></div>`;
             });
             container.appendChild(fragment);
-            initObserver();
+            setTimeout(initEliteEngine, 500);
         });
 
-        function initObserver() {
-            const obs = new IntersectionObserver((es) => {
-                es.forEach(e => {
-                    const v = e.target.querySelector('video');
-                    if (e.isIntersecting) { 
+        function initEliteEngine() {
+            const segments = document.querySelectorAll('.video-segment');
+            segments.forEach((section, i) => {
+                const v = section.querySelector('video');
+                
+                // Smart Preload Logic
+                ScrollTrigger.create({
+                    trigger: section,
+                    start: "top bottom",
+                    onEnter: () => {
                         if(!v.src) v.src = v.dataset.src;
-                        v.play().catch(() => {}); 
-                        v.style.transform = "scale(1)";
-                    } else { v.pause(); v.style.transform = "scale(1.1)"; }
+                        const next = segments[i+1];
+                        if(next) { const nv = next.querySelector('video'); if(!nv.src) nv.src = nv.dataset.src; }
+                    }
                 });
-            }, { threshold: 0.65 });
-            document.querySelectorAll('.v-seg').forEach(s => obs.observe(s));
+
+                // Apple Scroll Physics
+                gsap.fromTo(v, 
+                    { scale: 0.8, opacity: 0.2, filter: "brightness(0.5) blur(10px)" },
+                    {
+                        scale: 1, opacity: 1, filter: "brightness(1) blur(0px)",
+                        scrollTrigger: {
+                            trigger: section,
+                            start: "top bottom",
+                            end: "center center",
+                            scrub: 1.5,
+                            onToggle: self => {
+                                if(self.isActive) { v.play().catch(()=>{}); }
+                                else { v.pause(); }
+                            }
+                        }
+                    }
+                );
+
+                gsap.to(v, {
+                    opacity: 0, scale: 1.2, filter: "blur(15px)",
+                    scrollTrigger: { trigger: section, start: "center center", end: "bottom top", scrub: 1 }
+                });
+            });
         }
 
-        function checkAdmin() { if(prompt("SCAN RETINA KEY:") === MASTER_KEY) document.getElementById('admin-panel').style.display = 'flex'; }
+        function renderAdminContent() {
+            const adminList = document.getElementById('admin-list');
+            adminList.innerHTML = '';
+            if(!globalVideoData) return;
+            Object.keys(globalVideoData).reverse().forEach((id) => {
+                const vid = globalVideoData[id];
+                const thumb = vid.url.replace(/\.[^/.]+$/, ".jpg");
+                adminList.innerHTML += `
+                    <div class="video-item border-l-4 border-pink-600">
+                        <img class="w-16 h-20 rounded-lg object-cover bg-white/5" src="${thumb}" onerror="this.src='https://via.placeholder.com/80x100/111/pink?text=VIDEO'">
+                        <div class="flex-1 px-4">
+                             <span class="text-[10px] opacity-30 font-mono block">${id.substring(0,8)}</span>
+                             <span class="text-pink-500 text-xs font-bold">${vid.likes || 0} LIKES</span>
+                        </div>
+                        <button onclick="deleteVideo('${id}')" class="text-red-500 p-2"><i class="fas fa-trash-can"></i></button>
+                    </div>`;
+            });
+        }
+
+        function openAdmin() { if(prompt("ADMIN PASS:") === ADMIN_CODE) { renderAdminContent(); document.getElementById('admin-panel').style.display = 'flex'; } }
         function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
-        function toggleCore() { const p = document.getElementById('core-panel'); p.style.display = (p.style.display==='flex')?'none':'flex'; }
-        function deleteVideo(id) { if(confirm("Destroy Node?")) db.ref('go_2go_content/' + id).remove(); }
-        function triggerLike(id) { db.ref('go_2go_content/' + id + '/likes').transaction(l => (l || 0) + 1); }
-        function toggleMute(btn, id) { const v = document.getElementById('vid-'+id); v.muted = !v.muted; btn.innerHTML = v.muted ? '<i class="fas fa-volume-mute text-red-500"></i>' : '<i class="fas fa-walkie-talkie"></i>'; }
-        function sendSignal() { const i = document.getElementById('msg-input'); if(i.value.trim()){ db.ref('vox_chat').push({msg: i.value, time: Date.now()}); i.value=''; } }
-        
-        db.ref('vox_chat').limitToLast(20).on('value', s => {
-            const b = document.getElementById('chat-box'); b.innerHTML = '';
-            s.forEach(m => { b.innerHTML += `<div class="p-3 mb-2 border-r-2 border-cyan-400 bg-cyan-400/5 text-xs text-white">SIGNAL:: ${m.val().msg}</div>`; });
-            b.scrollTop = b.scrollHeight;
+        function deleteVideo(id) { if(confirm("حذف الإشارة نهائياً؟")) { db.ref(`videos/${id}`).remove(); setTimeout(renderAdminContent, 300); } }
+        function likeVideo(id) { triggerAd(ADS.like); db.ref(`videos/${id}/likes`).transaction(l => (l || 0) + 1); }
+        function openChatWithAd() { triggerAd(ADS.chat); toggleChat(); }
+        function shareWithAd() { triggerAd(ADS.share); if(navigator.share) navigator.share({url: window.location.href}); }
+        function toggleChat() { const c = document.getElementById('chat-overlay'); c.style.display = c.style.display==='flex'?'none':'flex'; }
+        function sendMsg() {
+            const inp = document.getElementById('msg-input');
+            if(inp.value.trim()){ db.ref('chat').push({user:USR_ID, text:inp.value}); inp.value=''; }
+        }
+
+        db.ref('chat').limitToLast(15).on('value', s => {
+            const box = document.getElementById('chat-box'); box.innerHTML = '';
+            s.forEach(m => {
+                const d = m.val();
+                box.innerHTML += `<div class="bg-white/5 p-4 rounded-2xl border-l-2 border-pink-500/30">
+                    <span class="text-[10px] text-pink-500 font-bold block mb-1 uppercase">${d.user}</span>
+                    <p class="text-sm text-white/80">${d.text}</p>
+                </div>`;
+            });
+            box.scrollTop = box.scrollHeight;
         });
 
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'); }, 1000);
-        document.addEventListener('touchstart', () => { document.querySelectorAll('video').forEach(v => v.muted = false); }, { once: true });
+        const myWidget = cloudinary.createUploadWidget({ 
+            cloudName: "dpcysggzh", uploadPreset: "poro_go",
+            sources: ['local'], multiple: false, clientAllowedFormats: ["mp4", "mov", "webm"]
+        }, (err, res) => {
+            if (!err && res.event === "success") db.ref('videos/').push({ url: res.info.secure_url, likes: 0, timestamp: Date.now() });
+        });
+        document.getElementById("upload-trigger").onclick = () => myWidget.open();
     </script>
 </body>
 </html>
