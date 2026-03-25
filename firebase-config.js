@@ -9,11 +9,11 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.database();
+const storage = firebase.storage();
 
 const CLOUD_NAME = 'dk5kas1gc';
 const UPLOAD_PRESET = 'go_kck';
 
-console.log('✅ Firebase ready');
+console.log('✅ SHΔDØW System Ready');
