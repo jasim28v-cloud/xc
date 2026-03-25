@@ -1,4 +1,3 @@
-// Firebase Configuration - استخدم مفاتيحك الخاصة
 const firebaseConfig = {
     apiKey: "AIzaSyCVyQS6kuOBDyx_FXoGx6xgXxbbzjs5COg",
     authDomain: "fokx-c135a.firebaseapp.com",
@@ -9,13 +8,11 @@ const firebaseConfig = {
     appId: "1:447033620521:web:730fde0a59cb5624128438"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.database();
 
-// Cloudinary
 const CLOUD_NAME = 'dk5kas1gc';
 const UPLOAD_PRESET = 'go_kck';
 
