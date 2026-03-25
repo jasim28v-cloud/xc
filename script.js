@@ -1,13 +1,12 @@
 let currentUser = null;
 
-// ========== Auth ==========
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
-        document.getElementById('userName').innerText = user.email.split('@')[0];
-        document.getElementById('userEmail').innerText = user.email;
+        document.getElementById('profileName').innerText = user.email.split('@')[0];
+        document.getElementById('profileEmail').innerText = user.email;
         loadVideos();
         loadMyVideos();
     } else {
@@ -16,11 +15,11 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-function showTab(tab) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+function switchAuth(type) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
     event.target.classList.add('active');
-    document.querySelectorAll('.form').forEach(f => f.classList.remove('active'));
-    document.getElementById(tab + 'Form').classList.add('active');
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    document.getElementById(type + 'Form').classList.add('active');
 }
 
 async function login() {
@@ -55,25 +54,28 @@ function logout() {
     auth.signOut();
 }
 
-function showSection(section) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById(section + 'Section').classList.add('active');
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+function switchTab(tab) {
+    document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+    if (event.target.closest('.nav-item')) {
+        event.target.closest('.nav-item').classList.add('active');
+    }
     
-    if (section === 'profile') loadMyVideos();
+    document.getElementById('videosContainer').style.display = tab === 'home' ? 'block' : 'none';
+    document.getElementById('uploadPanel').style.display = tab === 'upload' ? 'block' : 'none';
+    document.getElementById('profilePanel').style.display = tab === 'profile' ? 'block' : 'none';
+    
+    if (tab === 'profile') loadMyVideos();
 }
 
-// ========== Videos ==========
 async function loadVideos() {
-    const container = document.getElementById('videosList');
-    container.innerHTML = '<div class="loading">جاري التحميل...</div>';
+    const container = document.getElementById('videosContainer');
+    container.innerHTML = '<div class="loading">🎬 جاري تحميل الفيديوهات...</div>';
     
     const snapshot = await db.ref('videos').once('value');
     container.innerHTML = '';
     
     if (!snapshot.exists()) {
-        container.innerHTML = '<div class="loading">لا توجد فيديوهات</div>';
+        container.innerHTML = '<div class="loading">✨ لا توجد فيديوهات بعد<br>كن أول من يرفع فيديو!</div>';
         return;
     }
     
@@ -83,17 +85,25 @@ async function loadVideos() {
     
     videos.forEach(video => {
         const div = document.createElement('div');
-        div.className = 'video-item';
+        div.className = 'video-card';
         div.innerHTML = `
             <video src="${video.videoUrl}" loop muted></video>
-            <div class="video-info">
-                <div class="video-author">@${video.author?.username || 'user'}</div>
-                <div class="video-desc">${video.description || ''}</div>
+            <div class="video-overlay">
+                <div class="video-author">
+                    <div class="author-avatar">${video.author?.username?.charAt(0) || '👤'}</div>
+                    <span class="author-name">@${video.author?.username || 'user'}</span>
+                </div>
+                <div class="video-caption">${video.description || '🎵 فيديو رائع'}</div>
+                <div class="video-music">🎵 ${video.audioName || 'Original Sound'}</div>
             </div>
-            <div class="video-actions">
-                <button onclick="likeVideo('${video.id}', this)">
+            <div class="video-side-actions">
+                <button class="side-action" onclick="likeVideo('${video.id}', this)">
                     <span>❤️</span>
                     <span>${video.likes?.length || 0}</span>
+                </button>
+                <button class="side-action" onclick="shareVideo('${video.videoUrl}')">
+                    <span>📤</span>
+                    <span>مشاركة</span>
                 </button>
             </div>
         `;
@@ -115,24 +125,37 @@ async function likeVideo(videoId, btn) {
     
     if (likes.includes(currentUser.uid)) {
         likes = likes.filter(id => id !== currentUser.uid);
+        btn.querySelector('span:last-child').innerText = likes.length;
     } else {
         likes.push(currentUser.uid);
+        await ref.set(likes);
+        btn.querySelector('span:last-child').innerText = likes.length;
     }
     await ref.set(likes);
-    btn.querySelector('span:last-child').innerText = likes.length;
 }
 
-async function upload() {
+function shareVideo(url) {
+    if (navigator.share) {
+        navigator.share({ title: 'شاهد هذا الفيديو', url: url });
+    } else {
+        navigator.clipboard.writeText(url);
+        alert('✅ تم نسخ الرابط');
+    }
+}
+
+async function uploadVideo() {
     const file = document.getElementById('videoFile').files[0];
     const desc = document.getElementById('videoDesc').value;
     const status = document.getElementById('uploadStatus');
     
     if (!file) {
-        status.innerHTML = '❌ اختر فيديو';
+        status.innerHTML = '❌ الرجاء اختيار فيديو';
+        status.style.color = '#ff6b6b';
         return;
     }
     
-    status.innerHTML = '📤 جاري الرفع...';
+    status.innerHTML = '📤 جاري رفع الفيديو...';
+    status.style.color = '#fe2c55';
     
     const formData = new FormData();
     formData.append('file', file);
@@ -148,7 +171,7 @@ async function upload() {
         
         await db.ref('videos').push({
             videoUrl: data.secure_url,
-            description: desc || "فيديو جديد",
+            description: desc || "🎬 فيديو جديد",
             author: {
                 uid: currentUser.uid,
                 username: currentUser.email.split('@')[0]
@@ -157,24 +180,31 @@ async function upload() {
             createdAt: Date.now()
         });
         
-        status.innerHTML = '✅ تم الرفع!';
+        status.innerHTML = '✅ تم رفع الفيديو بنجاح!';
+        status.style.color = '#4caf50';
+        
         setTimeout(() => {
-            status.innerHTML = '';
             document.getElementById('videoFile').value = '';
             document.getElementById('videoDesc').value = '';
-            document.querySelector('.upload-box').innerHTML = '📹 اضغط لاختيار فيديو';
-            showSection('home');
+            document.querySelector('.upload-area').innerHTML = `
+                <div class="upload-icon-big">📹</div>
+                <p>اضغط لاختيار فيديو</p>
+                <span class="upload-hint">MP4, MOV, يصل إلى 100MB</span>
+            `;
+            status.innerHTML = '';
+            switchTab('home');
             loadVideos();
-        }, 1500);
+        }, 2000);
         
     } catch (error) {
         status.innerHTML = '❌ فشل الرفع: ' + error.message;
+        status.style.color = '#ff6b6b';
     }
 }
 
 async function loadMyVideos() {
     if (!currentUser) return;
-    const container = document.getElementById('myVideos');
+    const container = document.getElementById('myVideosList');
     const snapshot = await db.ref('videos').once('value');
     let count = 0;
     container.innerHTML = '';
@@ -185,7 +215,7 @@ async function loadMyVideos() {
             if (video.author && video.author.uid === currentUser.uid) {
                 count++;
                 const thumb = document.createElement('div');
-                thumb.className = 'video-thumb';
+                thumb.className = 'my-video-thumb';
                 thumb.innerHTML = '🎬';
                 thumb.onclick = () => window.open(video.videoUrl);
                 container.appendChild(thumb);
@@ -193,5 +223,8 @@ async function loadMyVideos() {
         });
     }
     
-    if (count === 0) container.innerHTML = '<p style="text-align:center">لا توجد فيديوهات</p>';
+    document.getElementById('videosCount').innerText = count;
+    if (count === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.5)">📹 لا توجد فيديوهات بعد<br>اضغط على + لرفع فيديو</div>';
+    }
 }
