@@ -2,122 +2,74 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TikTok Clone</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
-    <!-- Cloudinary Widget -->
-    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 </head>
 <body>
-    <!-- شاشة تسجيل الدخول -->
-    <div id="authScreen" class="screen active">
-        <div class="auth-container">
-            <div class="logo">
-                <div class="logo-icon">🎵</div>
-                <h1>TikTok Clone</h1>
-            </div>
-            <div class="auth-tabs">
-                <button class="tab-btn active" data-tab="login">تسجيل الدخول</button>
-                <button class="tab-btn" data-tab="register">إنشاء حساب</button>
-            </div>
-            
-            <form id="loginForm" class="auth-form active">
-                <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" required>
-                <input type="password" id="loginPassword" placeholder="كلمة المرور" required>
-                <button type="submit" class="auth-btn">دخول</button>
-                <div id="loginError" class="error-msg"></div>
-            </form>
-            
-            <form id="registerForm" class="auth-form">
-                <input type="text" id="regUsername" placeholder="اسم المستخدم" required>
-                <input type="email" id="regEmail" placeholder="البريد الإلكتروني" required>
-                <input type="password" id="regPassword" placeholder="كلمة المرور" required>
-                <button type="submit" class="auth-btn">إنشاء حساب</button>
-                <div id="regError" class="error-msg"></div>
-            </form>
+
+<div id="loginPage">
+    <div class="login-container">
+        <h1>🎵 TikTok</h1>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('login')">دخول</button>
+            <button class="tab" onclick="showTab('register')">تسجيل</button>
+        </div>
+        
+        <div id="loginForm" class="form active">
+            <input type="email" id="email" placeholder="البريد الإلكتروني">
+            <input type="password" id="password" placeholder="كلمة المرور">
+            <button onclick="login()">دخول</button>
+            <div id="loginMsg"></div>
+        </div>
+        
+        <div id="registerForm" class="form">
+            <input type="text" id="regName" placeholder="اسم المستخدم">
+            <input type="email" id="regEmail" placeholder="البريد الإلكتروني">
+            <input type="password" id="regPass" placeholder="كلمة المرور">
+            <button onclick="register()">إنشاء حساب</button>
+            <div id="regMsg"></div>
         </div>
     </div>
+</div>
 
-    <!-- الشاشة الرئيسية -->
-    <div id="mainScreen" class="screen" style="display: none;">
-        <nav class="bottom-nav">
-            <button class="nav-btn active" data-nav="home">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-label">الرئيسية</span>
-            </button>
-            <button class="nav-btn" data-nav="upload">
-                <span class="nav-icon">➕</span>
-                <span class="nav-label">رفع</span>
-            </button>
-            <button class="nav-btn" data-nav="profile">
-                <span class="nav-icon">👤</span>
-                <span class="nav-label">الملف</span>
-            </button>
-        </nav>
-
-        <div id="homePage" class="page active">
-            <div id="videoContainer" class="video-container">
-                <div class="loading-spinner">جاري تحميل الفيديوهات...</div>
-            </div>
-        </div>
-
-        <div id="uploadPage" class="page">
-            <div class="upload-container">
-                <h2>رفع فيديو جديد</h2>
-                <div class="upload-area" id="uploadArea">
-                    <span class="upload-icon">📹</span>
-                    <p>اضغط لاختيار فيديو</p>
-                    <input type="file" id="videoInput" accept="video/*" style="display: none;">
-                </div>
-                <textarea id="videoDesc" placeholder="اكتب وصفاً للفيديو..." rows="3"></textarea>
-                <button id="uploadBtn" class="upload-submit">رفع الفيديو</button>
-                <div id="uploadProgress" style="display: none;">
-                    <div class="progress-bar"><div class="progress-fill"></div></div>
-                    <p>جاري الرفع...</p>
-                </div>
-                <div id="uploadResult"></div>
-            </div>
-        </div>
-
-        <div id="profilePage" class="page">
-            <div class="profile-header">
-                <div class="profile-avatar" id="profileAvatar">👤</div>
-                <h3 id="profileUsername">username</h3>
-                <p id="profileEmail">email@example.com</p>
-                <div class="profile-stats">
-                    <div><strong id="followersCount">0</strong><span>متابع</span></div>
-                    <div><strong id="followingCount">0</strong><span>يتابع</span></div>
-                    <div><strong id="videosCount">0</strong><span>فيديو</span></div>
-                </div>
-                <button id="logoutBtn" class="logout-btn">تسجيل خروج</button>
-            </div>
-            <div id="userVideos" class="user-videos">
-                <h4>فيديوهاتي</h4>
-                <div id="userVideosList" class="videos-grid"></div>
-            </div>
-        </div>
+<div id="app" style="display:none">
+    <div class="nav">
+        <button class="nav-btn active" onclick="showSection('home')">🏠</button>
+        <button class="nav-btn" onclick="showSection('upload')">➕</button>
+        <button class="nav-btn" onclick="showSection('profile')">👤</button>
     </div>
-
-    <!-- مودال الفيديو -->
-    <div id="videoPlayerModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <video id="modalVideo" controls autoplay style="width: 100%; max-height: 70vh;"></video>
-            <div class="video-info">
-                <h4 id="modalUsername"></h4>
-                <p id="modalDesc"></p>
-                <div class="video-actions">
-                    <button id="modalLikeBtn" class="action-btn">❤️ <span id="modalLikes">0</span></button>
-                </div>
-            </div>
-        </div>
+    
+    <div id="homeSection" class="section active">
+        <div id="videosList"></div>
     </div>
+    
+    <div id="uploadSection" class="section">
+        <div class="upload-box" onclick="document.getElementById('videoFile').click()">
+            📹 اضغط لاختيار فيديو
+        </div>
+        <input type="file" id="videoFile" accept="video/*" style="display:none">
+        <textarea id="videoDesc" placeholder="وصف الفيديو..."></textarea>
+        <button onclick="upload()">رفع</button>
+        <div id="uploadStatus"></div>
+    </div>
+    
+    <div id="profileSection" class="section">
+        <div class="profile-card">
+            <div class="avatar">👤</div>
+            <h3 id="userName"></h3>
+            <p id="userEmail"></p>
+            <button onclick="logout()">تسجيل خروج</button>
+        </div>
+        <h4>فيديوهاتي</h4>
+        <div id="myVideos"></div>
+    </div>
+</div>
 
-    <script src="firebase-config.js"></script>
-    <script src="script.js"></script>
+<script src="firebase-config.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
