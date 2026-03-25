@@ -1,117 +1,121 @@
 // ============== المتغيرات العامة ==============
 let currentUser = null;
-let currentVideoPlaying = null;
+let allVideos = [];
 
-// ============== دوال المصادقة ==============
-document.addEventListener('DOMContentLoaded', () => {
-    // مراقبة حالة تسجيل الدخول
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            currentUser = user;
-            loadUserData(user.uid);
-            showMainScreen();
-            loadVideos();
-        } else {
-            showAuthScreen();
-        }
-    });
+// ============== مراقبة حالة تسجيل الدخول ==============
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUser = user;
+        loadUserData(user.uid);
+        showMainScreen();
+        loadVideos();
+    } else {
+        showAuthScreen();
+    }
+});
 
-    // أزرار التبويب
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tab = btn.dataset.tab;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
-            document.getElementById(`${tab}Form`).classList.add('active');
-        });
-    });
-
-    // تسجيل الدخول
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        try {
-            await auth.signInWithEmailAndPassword(email, password);
-        } catch (error) {
-            alert('خطأ في تسجيل الدخول: ' + error.message);
-        }
-    });
-
-    // إنشاء حساب
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = document.getElementById('regUsername').value;
-        const email = document.getElementById('regEmail').value;
-        const password = document.getElementById('regPassword').value;
-        try {
-            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-            await database.ref(`users/${userCredential.user.uid}`).set({
-                uid: userCredential.user.uid,
-                username: username,
-                email: email,
-                profilePicture: '',
-                bio: '',
-                followers: [],
-                following: [],
-                totalLikes: 0,
-                createdAt: Date.now()
-            });
-        } catch (error) {
-            alert('خطأ في التسجيل: ' + error.message);
-        }
-    });
-
-    // تسجيل الخروج
-    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-        await auth.signOut();
-    });
-
-    // التنقل بين الصفحات
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const page = btn.dataset.nav;
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(`${page}Page`).classList.add('active');
-            
-            if (page === 'profile') {
-                loadUserProfile();
-            }
-        });
-    });
-
-    // رفع الفيديو
-    const uploadArea = document.getElementById('uploadArea');
-    const videoInput = document.getElementById('videoInput');
-    
-    uploadArea.addEventListener('click', () => {
-        videoInput.click();
-    });
-    
-    videoInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            const file = e.target.files[0];
-            uploadArea.innerHTML = `
-                <span class="upload-icon">✅</span>
-                <p>${file.name}</p>
-            `;
-        }
-    });
-    
-    document.getElementById('uploadBtn').addEventListener('click', uploadVideo);
-    
-    // مودال الفيديو
-    document.querySelector('.close-modal').addEventListener('click', () => {
-        document.getElementById('videoPlayerModal').classList.remove('active');
-        const video = document.getElementById('modalVideo');
-        video.pause();
+// ============== عناصر DOM ==============
+// Auth tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+        document.getElementById(`${tab}Form`).classList.add('active');
     });
 });
 
-// ============== دوال تحميل البيانات ==============
+// Login
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const errorDiv = document.getElementById('loginError');
+    
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        errorDiv.textContent = '';
+    } catch (error) {
+        errorDiv.textContent = error.message;
+    }
+});
+
+// Register
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('regUsername').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    const errorDiv = document.getElementById('regError');
+    
+    try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        await database.ref(`users/${userCredential.user.uid}`).set({
+            uid: userCredential.user.uid,
+            username: username,
+            email: email,
+            profilePicture: '',
+            bio: '',
+            followers: [],
+            following: [],
+            totalLikes: 0,
+            createdAt: Date.now()
+        });
+        errorDiv.textContent = '';
+    } catch (error) {
+        errorDiv.textContent = error.message;
+    }
+});
+
+// Logout
+document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+    await auth.signOut();
+});
+
+// Navigation
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const page = btn.dataset.nav;
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(`${page}Page`).classList.add('active');
+        
+        if (page === 'profile') {
+            loadUserProfile();
+        }
+    });
+});
+
+// Upload video
+const uploadArea = document.getElementById('uploadArea');
+const videoInput = document.getElementById('videoInput');
+
+uploadArea.addEventListener('click', () => {
+    videoInput.click();
+});
+
+videoInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        uploadArea.innerHTML = `
+            <span class="upload-icon">✅</span>
+            <p>${file.name.substring(0, 30)}</p>
+        `;
+    }
+});
+
+document.getElementById('uploadBtn').addEventListener('click', uploadVideo);
+
+// Modal close
+document.querySelector('.close-modal').addEventListener('click', () => {
+    document.getElementById('videoPlayerModal').classList.remove('active');
+    const video = document.getElementById('modalVideo');
+    video.pause();
+});
+
+// ============== دوال البيانات ==============
 async function loadUserData(uid) {
     const snapshot = await database.ref(`users/${uid}`).get();
     if (snapshot.exists()) {
@@ -132,21 +136,22 @@ function updateProfileUI() {
 async function loadUserProfile() {
     if (!currentUser) return;
     
-    // تحميل فيديوهات المستخدم
-    const videosSnapshot = await database.ref('videos').orderByChild('author/uid').equalTo(currentUser.uid).get();
+    const videosSnapshot = await database.ref('videos').once('value');
     const videosList = document.getElementById('userVideosList');
     videosList.innerHTML = '';
     
     let count = 0;
     if (videosSnapshot.exists()) {
         videosSnapshot.forEach(child => {
-            count++;
             const video = child.val();
-            const thumb = document.createElement('img');
-            thumb.className = 'video-thumb';
-            thumb.src = video.thumbnailUrl || 'https://via.placeholder.com/150x267';
-            thumb.onclick = () => playVideo(video);
-            videosList.appendChild(thumb);
+            if (video.author && video.author.uid === currentUser.uid) {
+                count++;
+                const thumb = document.createElement('img');
+                thumb.className = 'video-thumb';
+                thumb.src = video.thumbnailUrl || 'https://via.placeholder.com/150x267';
+                thumb.onclick = () => playVideo(video);
+                videosList.appendChild(thumb);
+            }
         });
     }
     document.getElementById('videosCount').textContent = count;
@@ -164,15 +169,14 @@ async function loadVideos() {
         return;
     }
     
-    const videos = [];
+    allVideos = [];
     videosSnapshot.forEach(child => {
-        videos.push({ id: child.key, ...child.val() });
+        allVideos.push({ id: child.key, ...child.val() });
     });
     
-    // ترتيب من الأحدث للأقدم
-    videos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    allVideos.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     
-    videos.forEach(video => {
+    allVideos.forEach(video => {
         const videoElement = createVideoElement(video);
         container.appendChild(videoElement);
     });
@@ -185,20 +189,16 @@ function createVideoElement(video) {
         <video src="${video.videoUrl}" poster="${video.thumbnailUrl || ''}" loop muted></video>
         <div class="video-overlay">
             <div class="video-author">
-                <div class="avatar">👤</div>
+                <div class="avatar">${video.author?.username?.charAt(0) || '👤'}</div>
                 <span class="username">@${video.author?.username || 'user'}</span>
             </div>
             <div class="video-description">${video.description || ''}</div>
             <div class="video-music">🎵 ${video.audioName || 'Original Sound'}</div>
         </div>
         <div class="video-actions-side">
-            <button class="video-action" onclick="likeVideo('${video.id}')">
+            <button class="video-action" onclick="likeVideo('${video.id}', this)">
                 <span>❤️</span>
                 <span>${video.likes?.length || 0}</span>
-            </button>
-            <button class="video-action" onclick="openComments('${video.id}')">
-                <span>💬</span>
-                <span>${video.comments?.length || 0}</span>
             </button>
             <button class="video-action" onclick="shareVideo('${video.videoUrl}')">
                 <span>📤</span>
@@ -207,13 +207,11 @@ function createVideoElement(video) {
         </div>
     `;
     
-    // تشغيل/إيقاف الفيديو عند التمرير
     const videoEl = div.querySelector('video');
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 videoEl.play();
-                currentVideoPlaying = videoEl;
             } else {
                 videoEl.pause();
             }
@@ -225,7 +223,7 @@ function createVideoElement(video) {
 }
 
 // ============== دوال التفاعل ==============
-async function likeVideo(videoId) {
+async function likeVideo(videoId, btnElement) {
     if (!currentUser) return;
     
     const videoRef = database.ref(`videos/${videoId}/likes`);
@@ -239,7 +237,49 @@ async function likeVideo(videoId) {
     }
     
     await videoRef.set(likes);
-    loadVideos(); // تحديث العرض
+    
+    // تحديث العرض
+    const likeSpan = btnElement.querySelector('span:last-child');
+    likeSpan.textContent = likes.length;
+    
+    // تأثير بصري
+    btnElement.style.transform = 'scale(1.2)';
+    setTimeout(() => {
+        btnElement.style.transform = 'scale(1)';
+    }, 200);
+}
+
+function shareVideo(url) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'شاهد هذا الفيديو',
+            url: url
+        });
+    } else {
+        navigator.clipboard.writeText(url);
+        alert('تم نسخ الرابط');
+    }
+}
+
+function playVideo(video) {
+    const modal = document.getElementById('videoPlayerModal');
+    const videoEl = document.getElementById('modalVideo');
+    const username = document.getElementById('modalUsername');
+    const desc = document.getElementById('modalDesc');
+    const likesCount = document.getElementById('modalLikes');
+    
+    videoEl.src = video.videoUrl;
+    username.textContent = `@${video.author?.username || 'user'}`;
+    desc.textContent = video.description || '';
+    likesCount.textContent = video.likes?.length || 0;
+    
+    modal.classList.add('active');
+    
+    document.getElementById('modalLikeBtn').onclick = () => {
+        likeVideo(video.id, document.getElementById('modalLikeBtn'));
+        const newCount = (video.likes?.length || 0) + 1;
+        likesCount.textContent = newCount;
+    };
 }
 
 async function uploadVideo() {
@@ -253,10 +293,16 @@ async function uploadVideo() {
     
     const progressDiv = document.getElementById('uploadProgress');
     const progressFill = progressDiv.querySelector('.progress-fill');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const resultDiv = document.getElementById('uploadResult');
+    
     progressDiv.style.display = 'block';
+    uploadBtn.disabled = true;
+    resultDiv.innerHTML = '';
+    progressFill.style.width = '0%';
     
     try {
-        // رفع الفيديو إلى Cloudinary
+        // رفع إلى Cloudinary
         const formData = new FormData();
         formData.append('file', videoFile);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
@@ -280,9 +326,9 @@ async function uploadVideo() {
         
         const result = JSON.parse(response.responseText);
         
-        // حفظ البيانات في Firebase
+        // حفظ في Firebase
         const newVideoRef = database.ref('videos').push();
-        await newVideoRef.set({
+        const videoData = {
             id: newVideoRef.key,
             videoUrl: result.secure_url,
             thumbnailUrl: result.secure_url.replace('.mp4', '.jpg'),
@@ -298,12 +344,14 @@ async function uploadVideo() {
             audioName: 'Original Sound',
             createdAt: Date.now(),
             isPrivate: false
-        });
+        };
+        
+        await newVideoRef.set(videoData);
         
         progressDiv.style.display = 'none';
-        alert('تم رفع الفيديو بنجاح!');
+        resultDiv.innerHTML = '<div class="success-msg">✅ تم رفع الفيديو بنجاح!</div>';
         
-        // تنظيف النموذج
+        // تنظيف
         document.getElementById('videoInput').value = '';
         document.getElementById('videoDesc').value = '';
         document.getElementById('uploadArea').innerHTML = `
@@ -311,56 +359,21 @@ async function uploadVideo() {
             <p>اضغط لاختيار فيديو</p>
         `;
         
-        // العودة للصفحة الرئيسية
-        document.querySelector('[data-nav="home"]').click();
+        // تحديث الفيديوهات
         loadVideos();
         
+        setTimeout(() => {
+            resultDiv.innerHTML = '';
+        }, 3000);
+        
     } catch (error) {
-        alert('فشل الرفع: ' + error.message);
-        progressDiv.style.display = 'none';
+        resultDiv.innerHTML = `<div class="error-msg">❌ فشل الرفع: ${error.message}</div>`;
+    } finally {
+        uploadBtn.disabled = false;
     }
 }
 
-function playVideo(video) {
-    const modal = document.getElementById('videoPlayerModal');
-    const videoEl = document.getElementById('modalVideo');
-    const username = document.getElementById('modalUsername');
-    const desc = document.getElementById('modalDesc');
-    const likesCount = document.getElementById('modalLikes');
-    
-    videoEl.src = video.videoUrl;
-    username.textContent = `@${video.author?.username || 'user'}`;
-    desc.textContent = video.description || '';
-    likesCount.textContent = video.likes?.length || 0;
-    
-    modal.classList.add('active');
-    
-    // تحديث بيانات الإعجاب عند فتح المودال
-    document.getElementById('modalLikeBtn').onclick = () => {
-        likeVideo(video.id);
-        // تحديث العرض
-        const newCount = (video.likes?.length || 0) + 1;
-        likesCount.textContent = newCount;
-    };
-}
-
-function openComments(videoId) {
-    // يمكن إضافة نافذة تعليقات هنا
-    alert('ميزة التعليقات قيد التطوير');
-}
-
-function shareVideo(url) {
-    if (navigator.share) {
-        navigator.share({
-            title: 'شاهد هذا الفيديو',
-            url: url
-        });
-    } else {
-        navigator.clipboard.writeText(url);
-        alert('تم نسخ الرابط');
-    }
-}
-
+// ============== دوال الشاشات ==============
 function showMainScreen() {
     document.getElementById('authScreen').style.display = 'none';
     document.getElementById('mainScreen').style.display = 'flex';
@@ -370,3 +383,5 @@ function showAuthScreen() {
     document.getElementById('authScreen').style.display = 'flex';
     document.getElementById('mainScreen').style.display = 'none';
 }
+
+console.log('✅ TikTok Clone is ready!');
