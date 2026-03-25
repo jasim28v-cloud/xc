@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إدارة TikToki | رفع فيديوهات</title>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .card { background: #111; padding: 25px; border-radius: 12px; width: 320px; border: 1px solid #333; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: none; }
+        input { background: #222; color: #fff; }
+        button { background: #fe2c55; color: #fff; font-weight: bold; cursor: pointer; }
+        #panel { display: none; }
+    </style>
+</head>
+<body>
+    <div id="login" class="card">
+        <h3>دخول المشرف</h3>
+        <input type="password" id="pw" placeholder="رمز الدخول">
+        <button onclick="if(document.getElementById('pw').value==='1234'){document.getElementById('login').style.display='none';document.getElementById('panel').style.display='block';}else{alert('خطأ!')}">دخول</button>
+    </div>
+
+    <div id="panel" class="card">
+        <h3>نظام الرفع لـ TikToki</h3>
+        <input type="text" id="un" placeholder="اسم المستخدم">
+        <input type="text" id="ds" placeholder="وصف المقطع">
+        <input type="file" id="fi" accept="video/*">
+        <button id="upBtn" onclick="upload()">نشر الآن</button>
+        <p id="st" style="font-size:11px; color:gray; text-align:center"></p>
+    </div>
+
+    <script>
+        async function upload() {
+            const f = document.getElementById('fi').files[0];
+            const st = document.getElementById('st');
+            if(!f) return alert('اختر فيديو أولاً');
+            st.innerText = "جاري المعالجة السحابية...";
+            const fd = new FormData();
+            fd.append('file', f);
+            fd.append('upload_preset', 'ml_default'); // تأكد من إعدادها في Cloudinary
+
+            try {
+                const res = await fetch("https://api.cloudinary.com/v1_1/dlgwjrf8b/video/upload", {method:'POST', body:fd});
+                const d = await res.json();
+                await fetch("https://gorm-b3316-default-rtdb.firebaseio.com/videos.json", {
+                    method: 'POST',
+                    body: JSON.stringify({url: d.secure_url, username: document.getElementById('un').value, description: document.getElementById('ds').value, likes: 0})
+                });
+                alert('تم النشر بنجاح على TikToki!');
+                location.href = 'index.html';
+            } catch(e) { alert('فشل الرفع'); }
+        }
+    </script>
+</body>
+</html>
