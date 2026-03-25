@@ -2,216 +2,277 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SHΔDØW | GENESIS ULTIMATE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHΔDØW | THE ULTIMATE TITAN 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&family=Cairo:wght@400;700&display=swap');
-        :root { --neon-color: #00f3ff; }
-        body, html { margin: 0; padding: 0; height: 100%; background: #000; color: #fff; overflow: hidden; font-family: 'Cairo', sans-serif; transition: background 0.5s ease; }
-        .scroll-engine { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
-        .scroll-engine::-webkit-scrollbar { display: none; }
-        .video-segment { height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; background: #000; overflow: hidden; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        .micro-watermark { position: absolute; top: 110px; right: 20px; font-family: 'Orbitron'; font-size: 10px; color: rgba(255, 255, 255, 0.2); pointer-events: none; z-index: 10; letter-spacing: 2px; border: 1px solid rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; }
-        .glass-ui { background: rgba(0,0,0,0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
-        .digital-clock { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 900; color: var(--neon-color); text-shadow: 0 0 15px var(--neon-color); letter-spacing: 1px; }
-        .center-side-controls { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 25px; z-index: 100; align-items: center; }
-        .control-btn { width: 50px; height: 50px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; cursor: pointer; }
-        .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 420px; height: 70px; border-radius: 25px; display: flex; justify-content: space-around; align-items: center; z-index: 500; border: 1px solid var(--neon-color); }
-        .upload-main { width: 55px; height: 55px; background: var(--neon-color); color: #000; border-radius: 20px; display: flex; align-items: center; justify-content: center; transform: translateY(-10px); box-shadow: 0 0 20px var(--neon-color); cursor: pointer; }
-        #admin-overlay, #chat-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 1000; padding: 20px; overflow-y: auto; }
-        #chat-overlay { flex-direction: column; }
-        .admin-video-card { background: #111; border-radius: 15px; overflow: hidden; border: 1px solid #333; position: relative; height: 180px; }
-        .heart-animation { position: absolute; font-size: 80px; color: var(--neon-color); pointer-events: none; z-index: 1000; animation: heartFade 0.8s ease-out forwards; text-shadow: 0 0 20px var(--neon-color); }
-        @keyframes heartFade { 0% { transform: scale(0) rotate(-15deg); opacity: 0; } 50% { transform: scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Cairo:wght@300;900&display=swap');
+        
+        :root { --primary: #00f3ff; --secondary: #ff0055; --bg: #020202; }
+        body { background: var(--bg); color: #fff; font-family: 'Cairo', sans-serif; overflow-x: hidden; min-height: 100vh; }
+
+        .hero-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 50%, #0a0f1a 0%, #000 100%); }
+        
+        .titan-grid { display: grid; grid-template-columns: 100px 320px 1fr 320px; height: 100vh; gap: 0; }
+
+        @media (max-width: 1200px) {
+            .titan-grid { grid-template-columns: 1fr; height: auto; display: flex; flex-direction: column; }
+            .glass-sidebar { flex-direction: row !important; width: 100%; height: 70px !important; padding: 0 20px !important; justify-content: space-between !important; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            .logo-vertical { writing-mode: horizontal-tb !important; margin-bottom: 0 !important; font-size: 16px !important; }
+            .glass-sidebar .flex-col { flex-direction: row !important; gap: 15px !important; }
+            .btn-glow { width: 45px !important; height: 45px !important; }
+            .main-display { padding: 15px !important; }
+        }
+
+        .glass-sidebar { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(50px); border-left: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; align-items: center; padding: 40px 0; }
+        .glass-panel { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(30px); border-right: 1px solid rgba(255,255,255,0.05); padding: 25px; display: flex; flex-direction: column; }
+
+        .main-display { padding: 40px; overflow-y: auto; scrollbar-width: none; }
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+
+        .titan-card { position: relative; aspect-ratio: 9/16; background: #000; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .titan-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0, 243, 255, 0.2); }
+        
+        .watermark { position: absolute; top: 15px; right: 15px; font-family: 'Orbitron'; font-size: 12px; font-weight: 900; color: rgba(255,255,255,0.3); pointer-events: none; z-index: 5; text-shadow: 0 0 5px #000; }
+        
+        video { width: 100%; height: 100%; object-fit: cover; background: #000; cursor: pointer; }
+
+        .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, transparent 40%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; pointer-events: none; }
+        .card-overlay input { pointer-events: auto; }
+
+        .interaction-side { position: absolute; left: 15px; bottom: 80px; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 10; }
+        .action-btn { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); width: 45px; height: 45px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+        .action-btn:hover { background: var(--primary); color: #000; }
+        .action-btn span { font-size: 10px; font-weight: bold; margin-top: 2px; }
+
+        .comment-box { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 10px; margin-top: 10px; max-height: 100px; overflow-y: auto; font-size: 11px; border: 1px solid rgba(255,255,255,0.05); pointer-events: auto; }
+
+        .btn-glow { background: rgba(255,255,255,0.05); width: 60px; height: 60px; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
+        .upload-giant { background: linear-gradient(45deg, var(--primary), #0077ff); color: #000; font-family: 'Orbitron'; font-weight: 900; padding: 18px; border-radius: 20px; text-align: center; cursor: pointer; transition: 0.4s; box-shadow: 0 10px 20px rgba(0, 243, 255, 0.2); width: 100%; }
+        
+        .logo-vertical { font-family: 'Orbitron'; font-weight: 900; font-size: 20px; letter-spacing: 5px; writing-mode: vertical-rl; color: var(--primary); text-shadow: 0 0 15px var(--primary); }
     </style>
 </head>
 <body>
 
-    <header class="fixed top-0 w-full z-[200] glass-ui p-4 flex justify-between items-center border-b border-white/5">
-        <div class="digital-clock" id="clock-display">00:00:00</div>
-        <div class="text-[9px] font-[Orbitron] text-white/40 tracking-[3px]">GENESIS_CORE</div>
-    </header>
+    <div class="hero-bg"></div>
 
-    <main class="scroll-engine" id="video-stack"></main>
+    <div class="titan-grid">
+        <aside class="glass-sidebar">
+            <div class="logo-vertical mb-20">SHΔDØW</div>
+            <div class="flex flex-col gap-8">
+                <div class="btn-glow" title="Home" onclick="openAd()"><i class="fas fa-home text-xl"></i></div>
+                <div class="btn-glow" title="Trending" onclick="openAd()"><i class="fas fa-fire text-xl text-orange-500"></i></div>
+                <div class="btn-glow" title="VIP" onclick="openAd()"><i class="fas fa-crown text-xl text-yellow-500"></i></div>
+                <div class="btn-glow" title="Safety" onclick="openAd()"><i class="fas fa-shield-halved text-xl"></i></div>
+            </div>
+        </aside>
 
-    <nav class="bottom-nav glass-ui">
-        <div class="nav-item cursor-pointer text-center" onclick="location.reload()">
-            <i class="fas fa-home opacity-50 text-xl"></i>
-        </div>
-        <div class="nav-item cursor-pointer text-center" onclick="toggleChat()">
-            <i class="fas fa-comment-dots opacity-50 text-xl"></i>
-        </div>
-        <div id="upload-trigger" class="upload-main">
-            <i class="fas fa-plus text-xl"></i>
-        </div>
-        <div class="nav-item cursor-pointer text-center" onclick="toggleAdmin()">
-            <i class="fas fa-user-shield opacity-50 text-xl"></i>
-        </div>
-        <div class="nav-item cursor-pointer text-center" onclick="shareWithAd()">
-            <i class="fas fa-share-alt opacity-50 text-xl"></i>
-        </div>
-    </nav>
+        <section class="glass-panel">
+            <div class="mb-8">
+                <h3 class="text-[10px] font-[Orbitron] opacity-40 mb-3 tracking-widest">SYSTEM_LIVE</h3>
+                <div class="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold tracking-tighter">CORE_TITAN_CONNECTED</span>
+                </div>
+            </div>
 
-    <div id="admin-overlay">
-        <div class="flex justify-between items-center mb-6 sticky top-0 bg-black py-4 z-50">
-            <h2 style="color: var(--neon-color)" class="font-[Orbitron]">CORE_MANAGER</h2>
-            <i class="fas fa-times text-2xl cursor-pointer" onclick="toggleAdmin()"></i>
-        </div>
-        <div id="admin-grid" class="grid grid-cols-2 gap-4 pb-24"></div>
-    </div>
+            <div class="space-y-6 flex-1">
+                <h3 class="text-[10px] font-[Orbitron] opacity-40 tracking-widest uppercase">Global Chat</h3>
+                <div id="mini-chat" class="space-y-4 h-[250px] overflow-y-auto pr-2 opacity-80 text-[11px]"></div>
+                <div class="flex gap-2">
+                    <input id="chat-input" type="text" placeholder="أرسل رسالة..." class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs outline-none focus:border-cyan-500">
+                    <button onclick="sendMessage()" class="bg-cyan-500 text-black px-4 rounded-xl text-xs font-bold">إرسال</button>
+                </div>
+            </div>
 
-    <div id="chat-overlay" class="flex flex-col">
-        <div class="p-5 border-b border-white/10 flex justify-between items-center sticky top-0 bg-black/90 z-50">
-            <span style="color: var(--neon-color)" class="font-[Orbitron]">ENCRYPTED_STREAM</span>
-            <i class="fas fa-times text-xl cursor-pointer" onclick="toggleChat()"></i>
-        </div>
-        <div id="chat-box" class="flex-1 p-5 overflow-y-auto space-y-4 pb-32"></div>
-        <div class="fixed bottom-0 left-0 w-full p-6 bg-black/90 border-t border-white/10 flex gap-2">
-            <input type="text" id="msg-input" class="flex-1 bg-white/5 p-4 rounded-2xl border border-white/10 text-sm outline-none" placeholder="اكتب رسالة مشفرة...">
-            <button onclick="sendChat()" class="p-2"><i class="fas fa-paper-plane text-xl" style="color: var(--neon-color)"></i></button>
-        </div>
+            <div class="mt-8">
+                <div class="upload-giant" id="mega-upload">
+                    <i class="fas fa-plus-circle mr-2"></i> UPLOAD_TITAN
+                </div>
+            </div>
+        </section>
+
+        <main class="main-display">
+            <header class="flex justify-between items-center mb-10">
+                <div>
+                    <h1 class="text-4xl font-black italic tracking-tighter uppercase">Titan <span class="text-cyan-400">Stream</span></h1>
+                    <p class="text-[10px] opacity-40 font-[Orbitron]">GLOBAL_ENCRYPTED_FEED_2026</p>
+                </div>
+                <div id="user-id" class="px-5 py-2 bg-white/5 rounded-full border border-white/10 text-[10px] font-bold tracking-widest">ID: ----</div>
+            </header>
+
+            <div class="video-grid" id="titan-grid"></div>
+        </main>
+
+        <section class="glass-panel border-r-0 border-l border-white/5">
+            <h3 class="text-[10px] font-[Orbitron] opacity-40 mb-6 uppercase">Leaderboard</h3>
+            <div class="space-y-4">
+                <div class="p-5 bg-white/5 rounded-3xl border border-white/5" onclick="openAd()">
+                    <div class="text-[9px] opacity-50 mb-1">TOTAL_TRAFFIC</div>
+                    <div class="text-xl font-black text-cyan-400">4.8 TB/s</div>
+                </div>
+                <div class="p-5 bg-white/5 rounded-3xl border border-white/5">
+                    <div class="text-[9px] opacity-50 mb-1">ACTIVE_CORES</div>
+                    <div class="text-xl font-black">12,840</div>
+                </div>
+            </div>
+        </section>
     </div>
 
     <script>
-        const SHADOW_ID = localStorage.getItem('shadow_uid') || 'GHOST_' + Math.random().toString(36).substr(2, 4).toUpperCase();
+        const SHADOW_ID = localStorage.getItem('shadow_uid') || 'U_' + Math.random().toString(36).substr(2, 5).toUpperCase();
         localStorage.setItem('shadow_uid', SHADOW_ID);
+        document.getElementById('user-id').innerText = `ID: ${SHADOW_ID}`;
 
         const firebaseConfig = { databaseURL: "https://project-717e4-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // قائمة الروابط الإعلانية المحدثة
         const AD_LINKS = [
+            "https://www.effectivegatecpm.com/k60w64w4gk?key=564f3d8cc4ac85949f218179b742495e",
             "https://www.effectivegatecpm.com/bxwxuk2f39?key=566216691dc8b76a740840e94f68f44c",
-            "https://www.effectivegatecpm.com/k60w64w4gk?key=564f3d8cc4ac85949f218179b742495e"
+            "https://www.effectivegatecpm.com/q7bf96ad4p?key=4272e67963ce67f1cfaeb4a56682d6ec",
+            "https://www.effectivegatecpm.com/w6ejwgptb?key=b77b52a8f4f7e4cdd1ac7bccc1b04a4d"
         ];
-        let adCounter = 0;
-        function openAd() { window.open(AD_LINKS[adCounter], '_blank'); adCounter = (adCounter + 1) % AD_LINKS.length; }
-
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('clock-display').textContent = now.getHours().toString().padStart(2,'0')+":"+now.getMinutes().toString().padStart(2,'0')+":"+now.getSeconds().toString().padStart(2,'0');
+        
+        let adToggle = 0;
+        function openAd() {
+            window.open(AD_LINKS[adToggle], '_blank');
+            adToggle = (adToggle + 1) % AD_LINKS.length;
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+
+        const CLOUD_NAME = "dssk5tabb", UPLOAD_PRESET = "bjebvo5p";
+        const myWidget = cloudinary.createUploadWidget({ 
+            cloudName: CLOUD_NAME, 
+            uploadPreset: UPLOAD_PRESET,
+            clientAllowedFormats: ["mp4", "mov", "webm"]
+        }, (err, res) => {
+            if (!err && res.event === "success") {
+                db.ref('videos/').push({ 
+                    url: res.info.secure_url, 
+                    sender: SHADOW_ID, 
+                    likes: 0, 
+                    shares: 0,
+                    comments: [{user: "System", text: "تم رفع الفيديو بنجاح"}],
+                    timestamp: Date.now() 
+                });
+            }
+        });
+        document.getElementById("mega-upload").onclick = () => { myWidget.open(); };
 
         db.ref('videos').on('value', (snapshot) => {
-            const container = document.getElementById('video-stack');
-            const adminGrid = document.getElementById('admin-grid');
+            const grid = document.getElementById('titan-grid');
             const data = snapshot.val();
+            grid.innerHTML = '';
             if(!data) return;
-            container.innerHTML = ''; adminGrid.innerHTML = '';
-            
+
             Object.keys(data).reverse().forEach(id => {
                 const vid = data[id];
-                const section = document.createElement('section');
-                section.className = 'video-segment';
-                section.innerHTML = `
-                    <div class="micro-watermark">GENESIS</div>
-                    <video loop playsinline src="${vid.url}" onclick="handleVideoClick(event, '${id}')"></video>
-                    <div class="center-side-controls">
-                        <div class="control-btn" onclick="likeWithAd('${id}')">
-                            <i class="fas fa-heart ${vid.likedBy && vid.likedBy[SHADOW_ID] ? 'text-red-500' : ''}"></i>
-                            <span class="text-[10px] mt-1">${vid.likes || 0}</span>
+                const card = document.createElement('div');
+                card.className = 'titan-card';
+                card.innerHTML = `
+                    <div class="watermark">SHΔDØW TITAN</div>
+                    <video loop muted playsinline src="${vid.url}" onclick="togglePlay(this)"></video>
+                    
+                    <div class="interaction-side">
+                        <div class="action-btn" onclick="likeVideo('${id}')">
+                            <i class="fas fa-heart"></i>
+                            <span>${vid.likes || 0}</span>
                         </div>
-                        <div class="control-btn" onclick="muteWithAd(this)"><i class="fas fa-volume-up"></i></div>
-                        <div class="control-btn" onclick="shareWithAd()"><i class="fas fa-paper-plane"></i></div>
+                        <div class="action-btn" onclick="shareVideo('${id}')">
+                            <i class="fas fa-share"></i>
+                            <span>${vid.shares || 0}</span>
+                        </div>
+                        <div class="action-btn" onclick="openAd()">
+                            <i class="fas fa-comment"></i>
+                            <span>${vid.comments ? Object.keys(vid.comments).length : 0}</span>
+                        </div>
                     </div>
-                `;
-                container.appendChild(section);
 
-                adminGrid.innerHTML += `
-                    <div class="admin-video-card">
-                        <video src="${vid.url}" class="w-full h-full object-cover" muted></video>
-                        <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
-                            <button onclick="deleteVid('${id}')" class="bg-red-600 text-white px-4 py-1 rounded-full text-[10px] font-bold">DELETE</button>
+                    <div class="card-overlay">
+                        <div class="text-xs font-bold text-cyan-400 mb-1">@${vid.sender}</div>
+                        <div class="comment-box" id="comments-${id}">
+                            ${vid.comments ? Object.values(vid.comments).map(c => `<div><b class="text-cyan-400">${c.user}:</b> ${c.text}</div>`).join('') : 'لا يوجد تعليقات'}
+                        </div>
+                        <div class="flex mt-2 gap-2">
+                            <input type="text" placeholder="اكتب تعليقاً..." class="bg-black/50 text-[10px] w-full p-2 rounded-lg border border-white/10 outline-none focus:border-cyan-500" onkeydown="addComment(event, '${id}')">
                         </div>
                     </div>
                 `;
+                grid.appendChild(card);
             });
-            initScroll();
+            initAutoPlay();
         });
 
-        let lastClick = 0;
-        function handleVideoClick(e, id) {
-            const now = Date.now();
-            if (now - lastClick < 300) {
-                db.ref(`videos/${id}/likes`).transaction(l => (l || 0) + 1);
-                db.ref(`videos/${id}/likedBy/${SHADOW_ID}`).set(true);
-                showHeartEffect(e);
+        function initAutoPlay() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if (entry.isIntersecting) {
+                        video.play().catch(e => {});
+                    } else {
+                        video.pause();
+                    }
+                });
+            }, { threshold: 0.6 });
+
+            document.querySelectorAll('.titan-card').forEach(card => observer.observe(card));
+        }
+
+        function togglePlay(v) { 
+            if (v.paused) {
+                v.play();
+                v.muted = false;
             } else {
-                const v = e.target;
-                v.paused ? v.play().catch(()=>{}) : v.pause();
+                v.pause();
             }
-            lastClick = now;
         }
 
-        function showHeartEffect(e) {
-            const h = document.createElement('i');
-            h.className = 'fas fa-heart heart-animation';
-            h.style.left = (e.clientX || e.pageX) - 40 + 'px';
-            h.style.top = (e.clientY || e.pageY) - 40 + 'px';
-            document.body.appendChild(h);
-            setTimeout(() => h.remove(), 800);
+        function likeVideo(id) {
+            openAd();
+            db.ref(`videos/${id}`).transaction(p => { if(p) p.likes = (p.likes || 0) + 1; return p; });
         }
 
-        function toggleChat() { const c = document.getElementById('chat-overlay'); c.style.display = c.style.display === 'flex' ? 'none' : 'flex'; }
-        function toggleAdmin() { const a = document.getElementById('admin-overlay'); a.style.display = a.style.display === 'block' ? 'none' : 'block'; }
-        
-        function sendChat() {
-            const input = document.getElementById('msg-input');
-            if(input.value.trim()){
-                db.ref('global_chat').push({u: SHADOW_ID, t: input.value, ts: Date.now()});
+        function shareVideo(id) {
+            openAd();
+            navigator.clipboard.writeText(window.location.href).then(() => alert("تم نسخ الرابط!"));
+            db.ref(`videos/${id}`).transaction(p => { if(p) p.shares = (p.shares || 0) + 1; return p; });
+        }
+
+        function addComment(e, id) {
+            if(e.key === 'Enter' && e.target.value.trim() !== '') {
+                openAd();
+                db.ref(`videos/${id}/comments`).push({ user: SHADOW_ID.split('_')[1], text: e.target.value });
+                e.target.value = '';
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            if(input.value.trim() !== '') {
+                db.ref('global_chat').push({ user: SHADOW_ID.split('_')[1], text: input.value });
                 input.value = '';
             }
         }
 
-        db.ref('global_chat').limitToLast(20).on('value', s => {
-            const box = document.getElementById('chat-box');
-            box.innerHTML = '';
-            s.forEach(m => {
-                const d = m.val();
-                const isMe = d.u === SHADOW_ID;
-                box.innerHTML += `
-                    <div class="flex flex-col ${isMe ? 'items-start' : 'items-end'}">
-                        <span class="text-[8px] opacity-40 mb-1">${d.u}</span>
-                        <div class="p-3 rounded-2xl text-sm ${isMe ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : 'bg-white/5'} max-w-[85%]">
-                            ${d.t}
-                        </div>
-                    </div>
-                `;
+        db.ref('global_chat').limitToLast(15).on('value', s => {
+            const chat = document.getElementById('mini-chat');
+            chat.innerHTML = '';
+            const val = s.val();
+            if(val) Object.values(val).forEach(m => {
+                const msg = document.createElement('div');
+                msg.className = 'p-3 bg-white/5 rounded-xl border-r-2 border-cyan-500';
+                msg.innerHTML = `<span class="text-cyan-400 font-black block">${m.user}</span> ${m.text}`;
+                chat.appendChild(msg);
             });
-            box.scrollTop = box.scrollHeight;
+            chat.scrollTop = chat.scrollHeight;
         });
-
-        function likeWithAd(id) { openAd(); db.ref(`videos/${id}/likes`).transaction(l => (l || 0) + 1); }
-        function muteWithAd(btn) { openAd(); const v = btn.closest('.video-segment').querySelector('video'); v.muted = !v.muted; btn.innerHTML = v.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>'; }
-        function shareWithAd() { openAd(); navigator.share({ url: window.location.href }).catch(()=>{}); }
-        function deleteVid(id) { if(confirm('حذف؟')) db.ref(`videos/${id}`).remove(); }
-
-        const widget = cloudinary.createUploadWidget({ cloudName: "dssk5tabb", uploadPreset: "bjebvo5p" }, (err, res) => {
-            if (!err && res.event === "success") { db.ref('videos/').push({ url: res.info.secure_url, sender: SHADOW_ID, likes: 0, timestamp: Date.now() }); }
-        });
-        document.getElementById("upload-trigger").onclick = () => { widget.open(); };
-
-        function initScroll() {
-            const colors = ['#00f3ff', '#ff00ff', '#00ffaa', '#ffff00', '#ff4d00'];
-            const obs = new IntersectionObserver((entries) => {
-                entries.forEach(e => {
-                    const v = e.target.querySelector('video');
-                    if(e.isIntersecting) {
-                        if(v) v.play().catch(()=>{});
-                        document.documentElement.style.setProperty('--neon-color', colors[Math.floor(Math.random() * colors.length)]);
-                    } else { if(v) v.pause(); }
-                });
-            }, { threshold: 0.6 });
-            document.querySelectorAll('.video-segment').forEach(s => obs.observe(s));
-        }
     </script>
 </body>
 </html>
