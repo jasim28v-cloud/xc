@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SHΔDØW | TikTok Ultra Pro</title>
+    <title>SHΔDØW | TikTok Ultra</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -15,14 +15,14 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #000; color: #fff; overflow: hidden; height: 100vh; }
         
-        /* شاشة تسجيل الدخول المتطورة */
-        .login-screen { position: fixed; inset: 0; z-index: 1000; background: radial-gradient(circle at 30% 10%, #1a1a2e, #000); display: flex; align-items: center; justify-content: center; }
-        .login-card { background: rgba(0,0,0,0.7); backdrop-filter: blur(20px); border-radius: 32px; padding: 40px 24px; width: 90%; max-width: 380px; text-align: center; border: 1px solid rgba(254,44,85,0.3); box-shadow: 0 0 40px rgba(254,44,85,0.2); animation: fadeInUp 0.6s ease; }
+        /* شاشة تسجيل الدخول */
+        .login-screen { position: fixed; inset: 0; z-index: 1000; background: radial-gradient(circle at 30% 10%, #0a0a0a, #000); display: flex; align-items: center; justify-content: center; }
+        .login-card { background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); border-radius: 32px; padding: 40px 28px; width: 90%; max-width: 380px; text-align: center; border: 1px solid rgba(254,44,85,0.3); box-shadow: 0 0 40px rgba(254,44,85,0.2); animation: fadeInUp 0.5s ease; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .login-card h1 { font-size: 36px; font-weight: 900; background: linear-gradient(135deg, #fe2c55, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 30px; letter-spacing: -1px; }
-        .login-card input { width: 100%; padding: 14px 18px; margin: 10px 0; border-radius: 30px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: white; transition: all 0.3s; }
+        .login-card h1 { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, #fe2c55, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 30px; letter-spacing: -1px; }
+        .login-card input { width: 100%; padding: 14px 18px; margin: 10px 0; border-radius: 30px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: white; transition: all 0.3s; font-size: 15px; }
         .login-card input:focus { outline: none; border-color: #fe2c55; background: rgba(254,44,85,0.1); }
-        .login-card button { width: 100%; padding: 14px; margin-top: 20px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); border: none; border-radius: 30px; color: white; font-weight: bold; cursor: pointer; transition: transform 0.2s; }
+        .login-card button { width: 100%; padding: 14px; margin-top: 20px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); border: none; border-radius: 30px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: transform 0.2s; }
         .login-card button:active { transform: scale(0.98); }
         .auth-tabs { display: flex; gap: 10px; margin-bottom: 30px; background: rgba(255,255,255,0.05); border-radius: 60px; padding: 4px; }
         .auth-tab { flex: 1; padding: 12px; background: none; border: none; color: #888; cursor: pointer; border-radius: 60px; transition: all 0.3s; font-weight: 500; }
@@ -32,17 +32,17 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         /* التطبيق الرئيسي */
-        #mainApp { display: none; height: 100vh; background: #000; }
+        #mainApp { display: none; height: 100vh; background: #000; position: relative; }
         
-        /* شريط علوي متطور */
+        /* شريط علوي */
         .top-bar { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
         .logo { display: flex; align-items: center; gap: 8px; }
-        .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .logo-icon { width: 34px; height: 34px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
         .logo-text { font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
-        .top-tabs { display: flex; gap: 20px; }
-        .top-tab { background: none; border: none; color: rgba(255,255,255,0.6); font-weight: 500; padding: 8px 0; cursor: pointer; transition: all 0.3s; }
-        .top-tab.active { color: #fe2c55; border-bottom: 2px solid #fe2c55; }
-        .top-icons { display: flex; gap: 20px; }
+        .top-tabs { display: flex; gap: 20px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 30px; }
+        .top-tab { background: none; border: none; color: rgba(255,255,255,0.6); font-weight: 500; padding: 6px 12px; cursor: pointer; transition: all 0.3s; border-radius: 20px; font-size: 14px; }
+        .top-tab.active { color: #fe2c55; background: rgba(254,44,85,0.2); }
+        .top-icons { display: flex; gap: 18px; }
         .top-icon { background: none; border: none; color: white; font-size: 20px; cursor: pointer; transition: transform 0.2s; }
         .top-icon:active { transform: scale(0.9); }
         
@@ -52,14 +52,14 @@
         .video-item { height: 100vh; scroll-snap-align: start; position: relative; background: #000; margin-bottom: 2px; }
         .video-item video { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
         
-        /* معلومات الفيديو المتطورة */
+        /* معلومات الفيديو */
         .video-info { position: absolute; bottom: 100px; left: 16px; right: 80px; z-index: 20; }
         .author-info { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
         .author-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fe2c55, #ff6b6b); display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; border: 2px solid white; overflow: hidden; transition: transform 0.2s; }
         .author-avatar:active { transform: scale(0.95); }
         .author-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .author-name { font-weight: bold; font-size: 17px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .follow-btn { background: #fe2c55; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; color: white; transition: all 0.2s; }
+        .author-name { font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .follow-btn { background: #fe2c55; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; border: none; color: white; transition: all 0.2s; }
         .follow-btn:active { transform: scale(0.95); }
         .video-caption { font-size: 14px; margin-bottom: 8px; line-height: 1.4; }
         .video-music { font-size: 12px; opacity: 0.8; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: opacity 0.2s; }
@@ -67,15 +67,15 @@
         .hashtag { color: #fe2c55; cursor: pointer; transition: opacity 0.2s; }
         .hashtag:hover { opacity: 0.8; text-decoration: underline; }
         
-        /* الأزرار الجانبية المتطورة */
+        /* الأزرار الجانبية */
         .side-actions { position: absolute; right: 12px; bottom: 120px; display: flex; flex-direction: column; gap: 24px; z-index: 20; }
-        .side-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: white; cursor: pointer; font-size: 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); transition: transform 0.1s; }
+        .side-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: white; cursor: pointer; font-size: 11px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); transition: transform 0.1s; }
         .side-btn:active { transform: scale(0.9); }
         .side-btn i { font-size: 32px; transition: all 0.2s; }
         .side-btn.active i { color: #fe2c55; text-shadow: 0 0 10px #fe2c55; }
-        .side-btn .count { font-weight: bold; }
+        .side-btn .count { font-weight: bold; margin-top: 2px; }
         
-        /* شريط سفلي متطور */
+        /* شريط سفلي */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; align-items: center; padding: 12px 0 24px; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); z-index: 100; border-top: 1px solid rgba(255,255,255,0.1); }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 10px; transition: all 0.2s; }
         .nav-item i { font-size: 24px; }
@@ -84,30 +84,79 @@
         .create-btn:active { transform: scale(0.95); }
         .create-btn i { font-size: 26px; color: white; }
         
-        /* تأثيرات إضافية */
-        .copy-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-        .copy-toast.show { opacity: 1; }
-        .heart-animation { position: fixed; font-size: 80px; color: #fe2c55; pointer-events: none; z-index: 1000; animation: heartFloat 0.8s ease-out forwards; filter: drop-shadow(0 0 10px #fe2c55); }
-        @keyframes heartFloat { 0% { transform: scale(0.5) translateY(0); opacity: 1; } 100% { transform: scale(1.5) translateY(-100px); opacity: 0; } }
-        
-        /* باقي اللوحات */
+        /* اللوحات المنبثقة */
         .share-panel, .comments-panel, .search-panel, .notifications-panel, .profile-panel, .edit-profile-panel, .sounds-panel { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 300; transform: translateX(100%); transition: 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); overflow-y: auto; }
         .share-panel.open, .comments-panel.open, .search-panel.open, .notifications-panel.open, .profile-panel.open, .edit-profile-panel.open, .sounds-panel.open { transform: translateX(0); }
         .panel-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; background: #000; z-index: 10; }
-        .panel-header h3 { font-size: 20px; font-weight: 600; }
+        .panel-header h3 { font-size: 18px; font-weight: 600; }
         .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
         .close-btn:active { background: rgba(255,255,255,0.1); }
         
-        /* صفحة الأصوات */
+        /* التعليقات */
+        .comment-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .comment-avatar { width: 40px; height: 40px; border-radius: 50%; background: #fe2c55; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+        .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .add-comment { display: flex; gap: 12px; padding: 12px; background: #1a1a1a; border-radius: 30px; margin-top: 16px; position: sticky; bottom: 0; }
+        .add-comment input { flex: 1; background: none; border: none; color: white; outline: none; font-size: 14px; padding: 8px 0; }
+        .add-comment button { background: none; border: none; color: #fe2c55; font-weight: bold; cursor: pointer; }
+        
+        /* البحث */
+        .search-input { width: 100%; padding: 14px 18px; border-radius: 30px; background: #1a1a1a; border: none; color: white; font-size: 15px; margin-bottom: 20px; }
+        .search-result { display: flex; align-items: center; gap: 14px; padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: background 0.2s; }
+        .search-result:active { background: rgba(255,255,255,0.05); }
+        .search-avatar { width: 48px; height: 48px; border-radius: 50%; background: #fe2c55; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+        .search-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* الأصوات */
         .sound-item { display: flex; align-items: center; gap: 15px; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: background 0.2s; }
         .sound-item:active { background: rgba(255,255,255,0.05); }
-        .sound-icon { width: 50px; height: 50px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .sound-icon { width: 52px; height: 52px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
         .sound-info { flex: 1; }
         .sound-name { font-weight: bold; margin-bottom: 4px; }
         .sound-count { font-size: 12px; opacity: 0.6; }
         
-        .loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: #888; gap: 10px; }
-        .spinner { width: 30px; height: 30px; border: 3px solid rgba(254,44,85,0.3); border-top-color: #fe2c55; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        /* الملف الشخصي */
+        .profile-panel { background: #000; }
+        .back-btn { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; backdrop-filter: blur(10px); transition: background 0.2s; }
+        .back-btn:active { background: rgba(0,0,0,0.8); }
+        .profile-header { text-align: center; padding: 60px 20px 40px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); }
+        .profile-avatar-large { width: 100px; height: 100px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 48px; margin: 0 auto; border: 3px solid white; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
+        .profile-avatar-large:active { transform: scale(0.97); }
+        .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-stats { display: flex; justify-content: center; gap: 40px; margin: 24px 0; }
+        .stat { text-align: center; }
+        .stat-number { font-size: 22px; font-weight: bold; }
+        .stat-label { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+        .edit-profile-btn, .logout-btn, .follow-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); padding: 10px 28px; border-radius: 40px; color: white; margin: 0 8px; cursor: pointer; transition: all 0.2s; font-size: 14px; }
+        .edit-profile-btn:active, .logout-btn:active, .follow-btn:active { transform: scale(0.97); }
+        .follow-btn { background: #fe2c55; border: none; }
+        .videos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 16px; }
+        .video-thumb { aspect-ratio: 9/16; background: #1a1a1a; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; border-radius: 4px; }
+        .video-thumb:active { transform: scale(0.97); }
+        .video-thumb i { font-size: 28px; opacity: 0.6; }
+        
+        /* تعديل الملف الشخصي */
+        .edit-profile-panel { background: #000; }
+        .avatar-upload { cursor: pointer; }
+        .edit-input { width: 100%; padding: 14px 16px; margin: 10px 0; border-radius: 16px; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); color: white; font-size: 15px; transition: all 0.2s; }
+        .edit-input:focus { outline: none; border-color: #fe2c55; }
+        .save-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); border: none; border-radius: 30px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 20px; transition: transform 0.2s; }
+        .save-btn:active { transform: scale(0.98); }
+        
+        /* الإشعارات */
+        .notification-item { display: flex; align-items: center; gap: 14px; padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .notification-item i { font-size: 24px; width: 40px; text-align: center; }
+        
+        /* عناصر إضافية */
+        .share-option { display: flex; align-items: center; gap: 15px; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: background 0.2s; }
+        .share-option:active { background: rgba(255,255,255,0.05); }
+        .share-option i { width: 32px; font-size: 22px; }
+        .copy-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .copy-toast.show { opacity: 1; }
+        .heart-animation { position: fixed; font-size: 80px; color: #fe2c55; pointer-events: none; z-index: 1000; animation: heartFloat 0.8s ease-out forwards; filter: drop-shadow(0 0 10px #fe2c55); }
+        @keyframes heartFloat { 0% { transform: scale(0.5) translateY(0); opacity: 1; } 100% { transform: scale(1.5) translateY(-100px); opacity: 0; } }
+        .loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: #888; gap: 12px; flex-direction: column; }
+        .spinner { width: 36px; height: 36px; border: 3px solid rgba(254,44,85,0.3); border-top-color: #fe2c55; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -146,8 +195,8 @@
             <span class="logo-text">SHΔDØW</span>
         </div>
         <div class="top-tabs">
-            <button class="top-tab active" onclick="switchFeed('following')">متابَعين</button>
-            <button class="top-tab" onclick="switchFeed('forYou')">لك</button>
+            <button class="top-tab" onclick="switchFeed('following')">متابَعين</button>
+            <button class="top-tab active" onclick="switchFeed('forYou')">لك</button>
         </div>
         <div class="top-icons">
             <i class="fas fa-search top-icon" onclick="openSearch()"></i>
@@ -166,7 +215,7 @@
         <button class="nav-item" onclick="switchTab('search')"><i class="fas fa-search"></i><span>بحث</span></button>
         <div class="create-btn" onclick="openUpload()"><i class="fas fa-plus"></i></div>
         <button class="nav-item" onclick="switchTab('notifications')"><i class="fas fa-heart"></i><span>الإشعارات</span></button>
-        <button class="nav-item" onclick="openProfile(currentUser?.uid)"><i class="fas fa-user"></i><span>الملف</span></button>
+        <button class="nav-item" onclick="openMyProfile()"><i class="fas fa-user"></i><span>الملف</span></button>
     </div>
 
     <!-- رسالة تم النسخ -->
@@ -175,23 +224,23 @@
     <!-- لوحة المشاركة -->
     <div id="sharePanel" class="share-panel">
         <div class="panel-header"><h3><i class="fas fa-share-alt ml-2"></i>مشاركة</h3><button class="close-btn" onclick="closeShare()"><i class="fas fa-times"></i></button></div>
-        <div class="share-option" onclick="copyLink()"><i class="fas fa-link text-blue-400 w-8"></i><span>نسخ الرابط</span></div>
-        <div class="share-option" onclick="shareToWhatsApp()"><i class="fab fa-whatsapp text-green-500 w-8"></i><span>WhatsApp</span></div>
-        <div class="share-option" onclick="shareToTelegram()"><i class="fab fa-telegram text-blue-400 w-8"></i><span>Telegram</span></div>
-        <div class="share-option" onclick="downloadVideo()"><i class="fas fa-download text-gray-400 w-8"></i><span>تنزيل الفيديو</span></div>
+        <div class="share-option" onclick="copyLink()"><i class="fas fa-link text-blue-400"></i><span>نسخ الرابط</span></div>
+        <div class="share-option" onclick="shareToWhatsApp()"><i class="fab fa-whatsapp text-green-500"></i><span>WhatsApp</span></div>
+        <div class="share-option" onclick="shareToTelegram()"><i class="fab fa-telegram text-blue-400"></i><span>Telegram</span></div>
+        <div class="share-option" onclick="downloadVideo()"><i class="fas fa-download text-gray-400"></i><span>تنزيل الفيديو</span></div>
     </div>
 
     <!-- لوحة التعليقات -->
     <div id="commentsPanel" class="comments-panel">
         <div class="panel-header"><h3><i class="fas fa-comment ml-2"></i>التعليقات</h3><button class="close-btn" onclick="closeComments()"><i class="fas fa-times"></i></button></div>
         <div id="commentsList" class="p-4"></div>
-        <div class="add-comment p-4 border-t border-white/10"><input type="text" id="commentInput" placeholder="أضف تعليقاً..."><button onclick="addComment()" style="color:#fe2c55">نشر</button></div>
+        <div class="add-comment p-4 border-t border-white/10"><input type="text" id="commentInput" placeholder="أضف تعليقاً..."><button onclick="addComment()">نشر</button></div>
     </div>
 
     <!-- لوحة البحث -->
     <div id="searchPanel" class="search-panel">
         <div class="panel-header"><h3><i class="fas fa-search ml-2"></i>بحث</h3><button class="close-btn" onclick="closeSearch()"><i class="fas fa-times"></i></button></div>
-        <div class="p-4"><input type="text" id="searchInput" class="search-input" placeholder="بحث عن مستخدمين، هاشتاقات..." onkeyup="searchAll()"></div>
+        <div class="p-4"><input type="text" id="searchInput" class="search-input" placeholder="بحث عن مستخدمين، هاشتاقات، فيديوهات..." onkeyup="searchAll()"></div>
         <div id="searchResults" class="p-4"></div>
     </div>
 
@@ -212,7 +261,7 @@
         <div class="back-btn" onclick="closeProfile()"><i class="fas fa-arrow-right"></i></div>
         <div class="profile-header">
             <div class="profile-avatar-large" id="profileAvatarDisplay" onclick="changeAvatar()">👤</div>
-            <h2 id="profileNameDisplay" class="mt-4 text-xl"></h2>
+            <h2 id="profileNameDisplay" class="mt-4 text-xl font-bold"></h2>
             <p id="profileBioDisplay" class="text-sm opacity-70 mt-1"></p>
             <div class="profile-stats">
                 <div class="stat"><div class="stat-number" id="profileFollowing">0</div><div class="stat-label">يتابع</div></div>
@@ -221,7 +270,7 @@
             </div>
             <div id="profileActions"></div>
         </div>
-        <div class="p-4"><h4 class="mb-2">فيديوهاتي</h4><div id="profileVideosList" class="videos-grid"></div></div>
+        <div class="p-4"><h4 class="mb-3 font-bold">فيديوهاتي</h4><div id="profileVideosList" class="videos-grid"></div></div>
     </div>
 
     <!-- لوحة تعديل الملف الشخصي -->
