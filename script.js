@@ -27,7 +27,12 @@ async function login() {
     try {
         await auth.signInWithEmailAndPassword(email, password);
         msg.innerText = '';
-    } catch (error) { msg.innerText = error.code === 'auth/user-not-found' ? 'لا يوجد حساب' : 'كلمة المرور غير صحيحة'; }
+    } catch (error) {
+        if (error.code === 'auth/user-not-found') msg.innerText = 'لا يوجد حساب بهذا البريد';
+        else if (error.code === 'auth/wrong-password') msg.innerText = 'كلمة المرور غير صحيحة';
+        else if (error.code === 'auth/invalid-email') msg.innerText = 'البريد الإلكتروني غير صحيح';
+        else msg.innerText = 'حدث خطأ، حاول مرة أخرى';
+    }
 }
 
 async function register() {
@@ -41,10 +46,22 @@ async function register() {
     try {
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         await db.ref(`users/${userCredential.user.uid}`).set({
-            username, email, bio: '', avatarUrl: '', followers: {}, following: {}, totalLikes: 0, createdAt: Date.now()
+            username: username,
+            email: email,
+            bio: '',
+            avatarUrl: '',
+            followers: {},
+            following: {},
+            totalLikes: 0,
+            createdAt: Date.now()
         });
         msg.innerText = '';
-    } catch (error) { msg.innerText = error.code === 'auth/email-already-in-use' ? 'البريد مستخدم' : 'حدث خطأ'; }
+    } catch (error) {
+        if (error.code === 'auth/email-already-in-use') msg.innerText = 'البريد الإلكتروني مستخدم بالفعل';
+        else if (error.code === 'auth/invalid-email') msg.innerText = 'البريد الإلكتروني غير صحيح';
+        else if (error.code === 'auth/weak-password') msg.innerText = 'كلمة المرور ضعيفة جداً';
+        else msg.innerText = 'حدث خطأ، حاول مرة أخرى';
+    }
 }
 
 function logout() { auth.signOut(); location.reload(); }
@@ -57,7 +74,7 @@ async function loadUserData() {
 
 db.ref('users').on('value', s => { allUsers = s.val() || {}; });
 
-// ========== عرض الفيديوهات ==========
+// ========== هاشتاقات ==========
 function addHashtags(text) {
     if (!text) return '';
     return text.replace(/#(\w+)/g, '<span class="hashtag" onclick="searchHashtag(\'$1\')">#$1</span>');
@@ -69,9 +86,10 @@ function searchHashtag(tag) {
     searchAll();
 }
 
+// ========== عرض الفيديوهات ==========
 db.ref('videos').on('value', (s) => {
     const data = s.val();
-    if (!data) return;
+    if (!data) { allVideos = []; renderVideos(); return; }
     allVideos = [];
     allSounds = {};
     Object.keys(data).forEach(key => {
@@ -89,23 +107,34 @@ function renderVideos() {
     if (!container) return;
     container.innerHTML = '';
     let filteredVideos = currentFeed === 'forYou' ? allVideos : allVideos.filter(v => currentUserData?.following?.[v.sender]);
-    if (filteredVideos.length === 0) { container.innerHTML = '<div class="loading"><div class="spinner"></div><span>لا توجد فيديوهات</span></div>'; return; }
+    if (filteredVideos.length === 0) {
+        container.innerHTML = '<div class="loading"><div class="spinner"></div><span>' + (currentFeed === 'forYou' ? 'لا توجد فيديوهات بعد' : 'تابع مستخدمين لرؤية فيديوهاتهم') + '</span></div>';
+        return;
+    }
     filteredVideos.forEach(video => {
         const isLiked = video.likedBy && video.likedBy[currentUser?.uid];
         const user = allUsers[video.sender] || { username: video.senderName || 'user', avatarUrl: '' };
         const isFollowing = currentUserData?.following && currentUserData.following[video.sender];
         const commentsCount = video.comments ? Object.keys(video.comments).length : 0;
         const caption = addHashtags(video.description || '');
+        const avatarHtml = (user.avatarUrl && user.avatarUrl !== '') 
+            ? `<img src="${user.avatarUrl}">` 
+            : (user.username?.charAt(0)?.toUpperCase() || '👤');
         const div = document.createElement('div');
         div.className = 'video-item';
         div.setAttribute('data-video-id', video.id);
         div.innerHTML = `
             <video loop playsinline muted data-src="${video.url}" poster="${video.thumbnail || ''}"></video>
             <div class="video-info">
-                <div class="author-info"><div class="author-avatar" onclick="viewProfile('${video.sender}')">${user.avatarUrl ? `<img src="${user.avatarUrl}">` : (user.username?.charAt(0) || '👤')}</div>
-                <div><span class="author-name" onclick="viewProfile('${video.sender}')">@${user.username}</span>${currentUser?.uid !== video.sender ? `<button class="follow-btn" onclick="toggleFollow('${video.sender}', this)">${isFollowing ? 'متابع' : 'متابعة'}</button>` : ''}</div></div>
+                <div class="author-info">
+                    <div class="author-avatar" onclick="viewProfile('${video.sender}')">${avatarHtml}</div>
+                    <div class="author-name">
+                        <span onclick="viewProfile('${video.sender}')">@${user.username}</span>
+                        ${currentUser?.uid !== video.sender ? `<button class="follow-btn" onclick="toggleFollow('${video.sender}', this)">${isFollowing ? 'متابع' : 'متابعة'}</button>` : ''}
+                    </div>
+                </div>
                 <div class="video-caption">${caption}</div>
-                <div class="video-music" onclick="searchBySound('${video.music}')"><i class="fas fa-music"></i> ${video.music || 'Original Sound'}</div>
+                <div class="video-music" onclick="searchBySound('${video.music || 'Original Sound'}')"><i class="fas fa-music"></i> ${video.music || 'Original Sound'}</div>
             </div>
             <div class="side-actions">
                 <button class="side-btn" onclick="toggleGlobalMute()"><i class="fas ${isMuted ? 'fa-volume-mute' : 'fa-volume-up'}"></i></button>
@@ -129,8 +158,8 @@ function showHeartAnimation(x, y) {
     const heart = document.createElement('div');
     heart.className = 'heart-animation';
     heart.innerHTML = '❤️';
-    heart.style.left = x + 'px';
-    heart.style.top = y + 'px';
+    heart.style.left = (x - 40) + 'px';
+    heart.style.top = (y - 40) + 'px';
     document.body.appendChild(heart);
     setTimeout(() => heart.remove(), 800);
 }
@@ -169,13 +198,20 @@ async function toggleLike(videoId, btn) {
     const videoRef = db.ref(`videos/${videoId}`);
     const snap = await videoRef.get();
     const video = snap.val();
+    if (!video) return;
     let likes = video.likes || 0;
     let likedBy = video.likedBy || {};
     if (likedBy[currentUser.uid]) { likes--; delete likedBy[currentUser.uid]; }
     else { likes++; likedBy[currentUser.uid] = true; await addNotification(video.sender, 'like', currentUser.uid); }
     await videoRef.update({ likes, likedBy });
     btn.classList.toggle('active');
-    btn.querySelector('.count').innerText = likes;
+    const countSpan = btn.querySelector('.count');
+    if (countSpan) countSpan.innerText = likes;
+    if (currentUserData && video.sender === currentUser.uid) {
+        const totalLikes = (currentUserData.totalLikes || 0) + (likedBy[currentUser.uid] ? 1 : -1);
+        await db.ref(`users/${currentUser.uid}/totalLikes`).set(totalLikes);
+        currentUserData.totalLikes = totalLikes;
+    }
 }
 
 // ========== المتابعة ==========
@@ -184,9 +220,23 @@ async function toggleFollow(userId, btn) {
     const userRef = db.ref(`users/${currentUser.uid}/following/${userId}`);
     const targetRef = db.ref(`users/${userId}/followers/${currentUser.uid}`);
     const snap = await userRef.get();
-    if (snap.exists()) { await userRef.remove(); await targetRef.remove(); btn.innerText = 'متابعة'; await addNotification(userId, 'unfollow', currentUser.uid); }
-    else { await userRef.set(true); await targetRef.set(true); btn.innerText = 'متابع'; await addNotification(userId, 'follow', currentUser.uid); }
-    if (viewingProfileUserId === userId) loadProfileData(userId);
+    if (snap.exists()) {
+        await userRef.remove();
+        await targetRef.remove();
+        btn.innerText = 'متابعة';
+        await addNotification(userId, 'unfollow', currentUser.uid);
+    } else {
+        await userRef.set(true);
+        await targetRef.set(true);
+        btn.innerText = 'متابع';
+        await addNotification(userId, 'follow', currentUser.uid);
+    }
+    if (currentUserData) {
+        if (!currentUserData.following) currentUserData.following = {};
+        if (snap.exists()) delete currentUserData.following[userId];
+        else currentUserData.following[userId] = true;
+    }
+    if (viewingProfileUserId === userId) await loadProfileData(userId);
 }
 
 // ========== التعليقات ==========
@@ -200,7 +250,8 @@ async function openComments(videoId) {
     container.innerHTML = '';
     Object.values(comments).reverse().forEach(c => {
         const user = allUsers[c.userId] || { username: c.username || 'user', avatarUrl: '' };
-        container.innerHTML += `<div class="comment-item"><div class="comment-avatar">${user.avatarUrl ? `<img src="${user.avatarUrl}">` : (user.username?.charAt(0) || '👤')}</div><div><div class="font-bold">@${user.username}</div><div class="text-sm">${c.text}</div></div></div>`;
+        const avatarHtml = (user.avatarUrl && user.avatarUrl !== '') ? `<img src="${user.avatarUrl}">` : (user.username?.charAt(0)?.toUpperCase() || '👤');
+        container.innerHTML += `<div class="comment-item"><div class="comment-avatar">${avatarHtml}</div><div><div class="font-bold">@${user.username}</div><div class="text-sm mt-1">${c.text}</div></div></div>`;
     });
     panel.classList.add('open');
 }
@@ -208,7 +259,10 @@ function closeComments() { document.getElementById('commentsPanel').classList.re
 async function addComment() {
     const input = document.getElementById('commentInput');
     if (!input.value.trim() || !currentVideoId) return;
-    await db.ref(`videos/${currentVideoId}/comments`).push({ userId: currentUser.uid, username: currentUserData?.username, text: input.value, timestamp: Date.now() });
+    const newComment = { userId: currentUser.uid, username: currentUserData?.username, text: input.value, timestamp: Date.now() };
+    await db.ref(`videos/${currentVideoId}/comments`).push(newComment);
+    const video = allVideos.find(v => v.id === currentVideoId);
+    if (video && video.sender !== currentUser.uid) await addNotification(video.sender, 'comment', currentUser.uid);
     input.value = '';
     openComments(currentVideoId);
 }
@@ -225,7 +279,7 @@ function showToast() { const t = document.getElementById('copyToast'); t.classLi
 // ========== الإشعارات ==========
 async function addNotification(targetUserId, type, fromUserId) {
     if (targetUserId === fromUserId) return;
-    const fromUser = allUsers[fromUserId] || { username: 'user' };
+    const fromUser = allUsers[fromUserId] || { username: 'مستخدم' };
     const messages = { like: 'أعجب بفيديو الخاص بك', comment: 'علق على فيديو الخاص بك', follow: 'بدأ بمتابعتك', unfollow: 'توقف عن متابعتك' };
     await db.ref(`notifications/${targetUserId}`).push({ type, fromUserId, fromUsername: fromUser.username, message: messages[type], timestamp: Date.now(), read: false });
 }
@@ -254,9 +308,9 @@ function searchAll() {
     const videos = allVideos.filter(v => v.description?.toLowerCase().includes(query) || v.music?.toLowerCase().includes(query));
     const hashtags = [...new Set(allVideos.flatMap(v => (v.description?.match(/#\w+/g) || []).filter(h => h.toLowerCase().includes(query))))];
     resultsDiv.innerHTML = `
-        ${users.length ? `<div class="mb-4"><h4 class="text-sm opacity-60 mb-2">👥 مستخدمين</h4>${users.map(u => `<div class="search-result" onclick="viewProfile('${u.uid}')"><div class="search-avatar">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.username.charAt(0) || '👤')}</div><div>@${u.username}</div></div>`).join('')}</div>` : ''}
-        ${hashtags.length ? `<div class="mb-4"><h4 class="text-sm opacity-60 mb-2"># هاشتاقات</h4>${hashtags.map(h => `<div class="search-result" onclick="searchHashtag('${h.substring(1)}')"><i class="fas fa-hashtag text-[#fe2c55]"></i><div>${h}</div></div>`).join('')}</div>` : ''}
-        ${videos.length ? `<div><h4 class="text-sm opacity-60 mb-2">🎬 فيديوهات</h4>${videos.map(v => `<div class="search-result" onclick="playVideo('${v.url}')"><i class="fas fa-video"></i><div>${v.description?.substring(0, 30) || 'فيديو'}</div></div>`).join('')}</div>` : ''}
+        ${users.length ? `<div class="mb-5"><h4 class="text-sm opacity-60 mb-2">👥 مستخدمين</h4>${users.map(u => `<div class="search-result" onclick="viewProfile('${u.uid}')"><div class="search-avatar">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.username.charAt(0)?.toUpperCase() || '👤')}</div><div>@${u.username}</div></div>`).join('')}</div>` : ''}
+        ${hashtags.length ? `<div class="mb-5"><h4 class="text-sm opacity-60 mb-2"># هاشتاقات</h4>${hashtags.map(h => `<div class="search-result" onclick="searchHashtag('${h.substring(1)}')"><i class="fas fa-hashtag text-[#fe2c55] w-8 text-xl"></i><div>${h}</div></div>`).join('')}</div>` : ''}
+        ${videos.length ? `<div><h4 class="text-sm opacity-60 mb-2">🎬 فيديوهات</h4>${videos.map(v => `<div class="search-result" onclick="playVideo('${v.url}')"><i class="fas fa-video w-8 text-xl"></i><div>${(v.description || 'فيديو').substring(0, 40)}</div></div>`).join('')}</div>` : ''}
     `;
 }
 
@@ -282,25 +336,30 @@ async function loadProfileData(userId) {
     const userSnap = await db.ref(`users/${userId}`).get();
     const user = userSnap.val();
     if (!user) return;
-    const avatar = document.getElementById('profileAvatarDisplay');
-    avatar.innerHTML = user.avatarUrl ? `<img src="${user.avatarUrl}">` : (user.username?.charAt(0) || '👤');
-    document.getElementById('profileNameDisplay').innerText = user.username;
-    document.getElementById('profileBioDisplay').innerText = user.bio || '';
+    const avatarDisplay = document.getElementById('profileAvatarDisplay');
+    if (user.avatarUrl && user.avatarUrl !== '') avatarDisplay.innerHTML = `<img src="${user.avatarUrl}">`;
+    else avatarDisplay.innerHTML = user.username?.charAt(0)?.toUpperCase() || '👤';
+    document.getElementById('profileNameDisplay').innerText = user.username || 'مستخدم';
+    document.getElementById('profileBioDisplay').innerText = user.bio || 'مرحباً! أنا على SHΔDØW';
     document.getElementById('profileFollowing').innerText = Object.keys(user.following || {}).length;
     document.getElementById('profileFollowers').innerText = Object.keys(user.followers || {}).length;
     const userVideos = allVideos.filter(v => v.sender === userId);
     const totalLikes = userVideos.reduce((sum, v) => sum + (v.likes || 0), 0);
     document.getElementById('profileLikes').innerText = totalLikes;
-    document.getElementById('profileVideosList').innerHTML = userVideos.map(v => `<div class="video-thumb" onclick="playVideo('${v.url}')"><i class="fas fa-play"></i></div>`).join('');
-    const actions = document.getElementById('profileActions');
-    if (userId === currentUser?.uid) actions.innerHTML = `<button class="edit-profile-btn" onclick="openEditProfile()">تعديل الملف</button><button class="logout-btn" onclick="logout()">تسجيل خروج</button>`;
-    else { const isFollowing = currentUserData?.following && currentUserData.following[userId]; actions.innerHTML = `<button class="follow-btn" style="padding:10px 30px" onclick="toggleFollow('${userId}', this)">${isFollowing ? 'متابع' : 'متابعة'}</button>`; }
+    const container = document.getElementById('profileVideosList');
+    container.innerHTML = '';
+    if (userVideos.length === 0) container.innerHTML = '<div class="text-center text-gray-400 py-10">لا توجد فيديوهات بعد</div>';
+    else userVideos.forEach(v => { const thumb = document.createElement('div'); thumb.className = 'video-thumb'; thumb.innerHTML = '<i class="fas fa-play"></i>'; thumb.onclick = () => playVideo(v.url); container.appendChild(thumb); });
+    const actionsDiv = document.getElementById('profileActions');
+    actionsDiv.innerHTML = '';
+    if (userId === currentUser?.uid) actionsDiv.innerHTML = `<button class="edit-profile-btn" onclick="openEditProfile()">تعديل الملف الشخصي</button><button class="logout-btn" onclick="logout()">تسجيل خروج</button>`;
+    else { const isFollowing = currentUserData?.following && currentUserData.following[userId]; actionsDiv.innerHTML = `<button class="follow-btn" onclick="toggleFollow('${userId}', this)">${isFollowing ? 'متابع' : 'متابعة'}</button>`; }
 }
-function openProfile(userId) { viewProfile(userId); }
+function openMyProfile() { if (currentUser) viewProfile(currentUser.uid); }
 function closeProfile() { document.getElementById('profilePanel').classList.remove('open'); viewingProfileUserId = null; }
-function openEditProfile() { document.getElementById('editUsername').value = currentUserData?.username || ''; document.getElementById('editBio').value = currentUserData?.bio || ''; document.getElementById('editProfilePanel').classList.add('open'); }
+function openEditProfile() { document.getElementById('editUsername').value = currentUserData?.username || ''; document.getElementById('editBio').value = currentUserData?.bio || ''; const editAvatar = document.getElementById('editAvatarDisplay'); if (currentUserData?.avatarUrl) editAvatar.innerHTML = `<img src="${currentUserData.avatarUrl}">`; else editAvatar.innerHTML = currentUserData?.username?.charAt(0)?.toUpperCase() || '👤'; document.getElementById('editProfilePanel').classList.add('open'); }
 function closeEditProfile() { document.getElementById('editProfilePanel').classList.remove('open'); }
-async function saveProfile() { await db.ref(`users/${currentUser.uid}`).update({ username: document.getElementById('editUsername').value, bio: document.getElementById('editBio').value }); currentUserData.username = document.getElementById('editUsername').value; currentUserData.bio = document.getElementById('editBio').value; closeEditProfile(); if (viewingProfileUserId === currentUser.uid) loadProfileData(currentUser.uid); renderVideos(); }
+async function saveProfile() { const newUsername = document.getElementById('editUsername').value; const newBio = document.getElementById('editBio').value; await db.ref(`users/${currentUser.uid}`).update({ username: newUsername, bio: newBio }); currentUserData.username = newUsername; currentUserData.bio = newBio; closeEditProfile(); if (viewingProfileUserId === currentUser.uid) await loadProfileData(currentUser.uid); renderVideos(); }
 function changeAvatar() { document.getElementById('avatarInput').click(); }
 async function uploadAvatar(input) {
     const file = input.files[0];
@@ -310,21 +369,21 @@ async function uploadAvatar(input) {
     const data = await res.json();
     await db.ref(`users/${currentUser.uid}/avatarUrl`).set(data.secure_url);
     currentUserData.avatarUrl = data.secure_url;
-    if (viewingProfileUserId === currentUser.uid) loadProfileData(currentUser.uid);
+    if (viewingProfileUserId === currentUser.uid) await loadProfileData(currentUser.uid);
     renderVideos();
 }
 function playVideo(url) { window.open(url, '_blank'); }
 
 // ========== رفع الفيديو ==========
-const widget = cloudinary.createUploadWidget({ cloudName: CLOUD_NAME, uploadPreset: UPLOAD_PRESET, sources: ['local'], clientAllowedFormats: ["mp4", "mov", "webm"] }, (err, result) => {
+const widget = cloudinary.createUploadWidget({ cloudName: CLOUD_NAME, uploadPreset: UPLOAD_PRESET, sources: ['local'], clientAllowedFormats: ["mp4", "mov", "webm"], maxFileSize: 100 * 1024 * 1024 }, (err, result) => {
     if (!err && result.event === "success") {
         const desc = prompt('وصف الفيديو (استخدم # للهاشتاق):') || '';
         const music = prompt('اسم الصوت:') || 'Original Sound';
         db.ref('videos/').push({ url: result.info.secure_url, thumbnail: result.info.secure_url.replace('.mp4', '.jpg'), description: desc, music, sender: currentUser.uid, senderName: currentUserData?.username, likes: 0, likedBy: {}, comments: {}, timestamp: Date.now() });
         alert('✅ تم رفع الفيديو بنجاح!');
-    }
+    } else if (err) console.error(err);
 });
-function openUpload() { widget.open(); }
+function openUpload() { if (currentUser) widget.open(); else alert('الرجاء تسجيل الدخول أولاً'); }
 
 function switchTab(tab) {
     document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
@@ -344,10 +403,11 @@ auth.onAuthStateChanged(async (user) => {
         const presenceRef = db.ref('presence/' + user.uid);
         presenceRef.set(true);
         presenceRef.onDisconnect().remove();
+        db.ref('presence').on('value', () => {});
     } else {
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
     }
 });
 
-console.log('✅ SHΔDØW Ultra Pro Ready');
+console.log('✅ SHΔDØW Ultra System Ready');
