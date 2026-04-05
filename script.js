@@ -14,51 +14,35 @@ let isMuted = true;
 let viewingProfileUserId = null;
 let currentFeed = 'forYou';
 
-// ========== دوال المصادقة ==========
-function switchAuth(type) {
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-    document.getElementById(type + 'Form').classList.add('active');
-}
-
-async function login() {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const msg = document.getElementById('loginMsg');
-    if (!email || !password) { msg.innerText = 'الرجاء ملء جميع الحقول'; return; }
-    msg.innerText = 'جاري تسجيل الدخول...';
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-        msg.innerText = '';
-    } catch (error) {
-        if (error.code === 'auth/user-not-found') msg.innerText = 'لا يوجد حساب';
-        else if (error.code === 'auth/wrong-password') msg.innerText = 'كلمة المرور غير صحيحة';
-        else msg.innerText = 'حدث خطأ';
+// ========== دوال التوثيق (Verification) ==========
+async function verifyUser(userId) {
+    if (!isAdmin) return;
+    if (confirm('✅ هل تريد توثيق هذا المستخدم؟')) {
+        await db.ref(`users/${userId}/verified`).set(true);
+        alert('✅ تم توثيق المستخدم بنجاح');
+        if (viewingProfileUserId === userId) await loadProfileData(userId);
+        renderVideos();
+        if (document.getElementById('adminPanel')?.classList.contains('open')) renderAdminPanel();
     }
 }
 
-async function register() {
-    const username = document.getElementById('regName').value;
-    const email = document.getElementById('regEmail').value;
-    const password = document.getElementById('regPass').value;
-    const msg = document.getElementById('regMsg');
-    if (!username || !email || !password) { msg.innerText = 'املأ جميع الحقول'; return; }
-    if (password.length < 6) { msg.innerText = 'كلمة المرور 6 أحرف على الأقل'; return; }
-    msg.innerText = 'جاري إنشاء الحساب...';
-    try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        await db.ref(`users/${userCredential.user.uid}`).set({
-            username, email, bio: '', avatarUrl: '', followers: {}, following: {}, totalLikes: 0, createdAt: Date.now()
-        });
-        msg.innerText = '';
-    } catch (error) {
-        if (error.code === 'auth/email-already-in-use') msg.innerText = 'البريد مستخدم';
-        else msg.innerText = 'حدث خطأ';
+async function unverifyUser(userId) {
+    if (!isAdmin) return;
+    if (confirm('⚠️ هل تريد إلغاء توثيق هذا المستخدم؟')) {
+        await db.ref(`users/${userId}/verified`).remove();
+        alert('✅ تم إلغاء توثيق المستخدم');
+        if (viewingProfileUserId === userId) await loadProfileData(userId);
+        renderVideos();
+        if (document.getElementById('adminPanel')?.classList.contains('open')) renderAdminPanel();
     }
 }
 
-function logout() { auth.signOut(); location.reload(); }
+// ========== دوال المصادقة (تمت إزالتها بالكامل - التوجيه إلى auth.html) ==========
+function logout() { 
+    auth.signOut(); 
+    localStorage.removeItem('auth_logged_in');
+    window.location.href = 'auth.html'; 
+}
 
 // ========== التحقق من الأدمن ==========
 function checkAdminStatus() {
@@ -71,7 +55,7 @@ function checkAdminStatus() {
     return false;
 }
 
-// ========== دوال الأدمن ==========
+// ========== دوال الأدمن مع إضافة أزرار التوثيق ==========
 async function renderAdminPanel() {
     if (!isAdmin) return '';
     const usersSnap = await db.ref('users').once('value');
@@ -80,6 +64,7 @@ async function renderAdminPanel() {
     const videos = videosSnap.val() || {};
     const totalLikes = Object.values(videos).reduce((sum, v) => sum + (v.likes || 0), 0);
     const bannedUsers = Object.values(users).filter(u => u.banned).length;
+    const verifiedUsers = Object.values(users).filter(u => u.verified).length;
     return `
         <div class="admin-panel-section">
             <h3 style="color:#fe2c55;font-weight:bold;margin-bottom:16px;display:flex;align-items:center;gap:8px"><i class="fas fa-shield-alt"></i> لوحة تحكم الأدمن</h3>
@@ -88,12 +73,17 @@ async function renderAdminPanel() {
                 <div class="admin-stat-card"><div class="admin-stat-number">${Object.keys(videos).length}</div><div class="admin-stat-label">فيديوهات</div></div>
                 <div class="admin-stat-card"><div class="admin-stat-number">${totalLikes}</div><div class="admin-stat-label">إجمالي الإعجابات</div></div>
                 <div class="admin-stat-card"><div class="admin-stat-number">${bannedUsers}</div><div class="admin-stat-label">محظورين</div></div>
+                <div class="admin-stat-card"><div class="admin-stat-number">${verifiedUsers}</div><div class="admin-stat-label">موثقين</div></div>
             </div>
             <div style="margin-bottom:20px"><h4 style="font-weight:bold;margin-bottom:12px">🗑️ حذف فيديوهات</h4><div class="admin-list">${Object.entries(videos).reverse().slice(0, 15).map(([id, v]) => `
                 <div class="admin-item"><div class="admin-item-info"><div class="admin-item-avatar"><i class="fas fa-video"></i></div><div class="admin-item-text"><div class="admin-item-name">${v.description?.substring(0, 35) || 'فيديو'}</div><div class="admin-item-email">@${v.senderName || 'user'}</div></div></div><button class="admin-delete-btn" onclick="adminDeleteVideo('${id}')">حذف</button></div>
             `).join('')}</div>${Object.keys(videos).length > 15 ? `<p class="text-center text-xs opacity-60 mt-2">+${Object.keys(videos).length - 15} فيديو آخر</p>` : ''}</div>
-            <div><h4 style="font-weight:bold;margin-bottom:12px">👥 إدارة المستخدمين</h4><div class="admin-list">${Object.entries(users).slice(0, 15).map(([uid, u]) => `
-                <div class="admin-item"><div class="admin-item-info"><div class="admin-item-avatar">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.username?.charAt(0) || 'U')}</div><div class="admin-item-text"><div class="admin-item-name">@${u.username} ${u.banned ? '<span style="background:#fe2c55;padding:2px 6px;border-radius:12px;font-size:9px;margin-left:5px">محظور</span>' : ''}</div><div class="admin-item-email">${u.email || ''}</div></div></div><div>${!u.banned ? `<button class="admin-ban-btn" onclick="adminBanUser('${uid}')">حظر</button>` : `<button class="admin-ban-btn" style="background:rgba(76,175,80,0.3);color:#4caf50" onclick="adminUnbanUser('${uid}')">إلغاء الحظر</button>`}<button class="admin-delete-btn" onclick="adminDeleteUser('${uid}')">حذف</button></div></div>
+            <div><h4 style="font-weight:bold;margin-bottom:12px">👥 إدارة المستخدمين</h4><div class="admin-list">${Object.entries(users).slice(0, 20).map(([uid, u]) => `
+                <div class="admin-item"><div class="admin-item-info"><div class="admin-item-avatar">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.username?.charAt(0) || 'U')}</div><div class="admin-item-text"><div class="admin-item-name">@${u.username} ${u.verified ? '<i class="fas fa-check-circle" style="color:#1d9bf0; font-size:12px;"></i>' : ''} ${u.banned ? '<span style="background:#fe2c55;padding:2px 6px;border-radius:12px;font-size:9px;margin-left:5px">محظور</span>' : ''}</div><div class="admin-item-email">${u.email || ''}</div></div></div><div>
+                    ${!u.verified ? `<button class="admin-verify-btn" onclick="verifyUser('${uid}')">✅ توثيق</button>` : `<button class="admin-unverify-btn" onclick="unverifyUser('${uid}')">⭐ موثق</button>`}
+                    ${!u.banned ? `<button class="admin-ban-btn" onclick="adminBanUser('${uid}')">حظر</button>` : `<button class="admin-ban-btn" style="background:rgba(76,175,80,0.3);color:#4caf50" onclick="adminUnbanUser('${uid}')">إلغاء الحظر</button>`}
+                    <button class="admin-delete-btn" onclick="adminDeleteUser('${uid}')">حذف</button>
+                </div></div>
             `).join('')}</div></div>
         </div>
     `;
@@ -112,7 +102,7 @@ db.ref('users').on('value', s => { allUsers = s.val() || {}; });
 function addHashtags(text) { if (!text) return ''; return text.replace(/#(\w+)/g, '<span class="hashtag" onclick="searchHashtag(\'$1\')">#$1</span>'); }
 function searchHashtag(tag) { document.getElementById('searchInput').value = '#' + tag; openSearch(); searchAll(); }
 
-// ========== عرض الفيديوهات ==========
+// ========== عرض الفيديوهات مع علامة التوثيق ==========
 db.ref('videos').on('value', (s) => {
     const data = s.val();
     if (!data) { allVideos = []; renderVideos(); return; }
@@ -129,7 +119,7 @@ function renderVideos() {
     if (filteredVideos.length === 0) { container.innerHTML = '<div class="loading"><div class="spinner"></div><span>' + (currentFeed === 'forYou' ? 'لا توجد فيديوهات' : 'تابع مستخدمين لرؤية فيديوهاتهم') + '</span></div>'; return; }
     filteredVideos.forEach(video => {
         const isLiked = video.likedBy && video.likedBy[currentUser?.uid];
-        const user = allUsers[video.sender] || { username: video.senderName || 'user', avatarUrl: '' };
+        const user = allUsers[video.sender] || { username: video.senderName || 'user', avatarUrl: '', verified: false };
         const isFollowing = currentUserData?.following && currentUserData.following[video.sender];
         const commentsCount = video.comments ? Object.keys(video.comments).length : 0;
         const caption = addHashtags(video.description || '');
@@ -138,7 +128,7 @@ function renderVideos() {
         div.innerHTML = `
             <video loop playsinline muted data-src="${video.url}" poster="${video.thumbnail || ''}"></video>
             <div class="video-info">
-                <div class="author-info"><div class="author-avatar" onclick="viewProfile('${video.sender}')">${avatarHtml}</div><div class="author-name"><span onclick="viewProfile('${video.sender}')">@${user.username}</span>${currentUser?.uid !== video.sender ? `<button class="follow-btn" onclick="toggleFollow('${video.sender}', this)">${isFollowing ? 'متابع' : 'متابعة'}</button>` : ''}</div></div>
+                <div class="author-info"><div class="author-avatar" onclick="viewProfile('${video.sender}')">${avatarHtml}</div><div class="author-name"><span onclick="viewProfile('${video.sender}')">@${user.username}</span>${user.verified ? '<i class="fas fa-check-circle verified-badge"></i>' : ''}${currentUser?.uid !== video.sender ? `<button class="follow-btn" onclick="toggleFollow('${video.sender}', this)">${isFollowing ? 'متابع' : 'متابعة'}</button>` : ''}</div></div>
                 <div class="video-caption">${caption}</div>
                 <div class="video-music" onclick="searchBySound('${video.music || 'Original Sound'}')"><i class="fas fa-music"></i> ${video.music || 'Original Sound'}</div>
             </div>
@@ -188,7 +178,7 @@ function closeNotifications() { document.getElementById('notificationsPanel').cl
 // ========== البحث ==========
 function openSearch() { document.getElementById('searchPanel').classList.add('open'); }
 function closeSearch() { document.getElementById('searchPanel').classList.remove('open'); }
-function searchAll() { const query = document.getElementById('searchInput').value.toLowerCase(); const resultsDiv = document.getElementById('searchResults'); if (!query) { resultsDiv.innerHTML = ''; return; } const users = Object.values(allUsers).filter(u => u.username.toLowerCase().includes(query)); const videos = allVideos.filter(v => v.description?.toLowerCase().includes(query) || v.music?.toLowerCase().includes(query)); const hashtags = [...new Set(allVideos.flatMap(v => (v.description?.match(/#\w+/g) || []).filter(h => h.toLowerCase().includes(query))))]; resultsDiv.innerHTML = `${users.length ? `<div class="mb-5"><h4 class="text-sm opacity-60 mb-2">👥 مستخدمين</h4>${users.map(u => `<div class="search-result" onclick="viewProfile('${u.uid}')"><div class="search-avatar">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.username.charAt(0)?.toUpperCase() || '👤')}</div><div>@${u.username}</div></div>`).join('')}</div>` : ''}${hashtags.length ? `<div class="mb-5"><h4 class="text-sm opacity-60 mb-2"># هاشتاقات</h4>${hashtags.map(h => `<div class="search-result" onclick="searchHashtag('${h.substring(1)}')"><i class="fas fa-hashtag text-[#fe2c55] w-8 text-xl"></i><div>${h}</div></div>`).join('')}</div>` : ''}${videos.length ? `<div><h4 class="text-sm opacity-60 mb-2">🎬 فيديوهات</h4>${videos.map(v => `<div class="search-result" onclick="playVideo('${v.url}')"><i class="fas fa-video w-8 text-xl"></i><div>${(v.description || 'فيديو').substring(0, 40)}</div></div>`).join('')}</div>` : ''}`; }
+function searchAll() { const query = document.getElementById('searchInput').value.toLowerCase(); const resultsDiv = document.getElementById('searchResults'); if (!query) { resultsDiv.innerHTML = ''; return; } const users = Object.values(allUsers).filter(u => u.username.toLowerCase().includes(query)); const videos = allVideos.filter(v => v.description?.toLowerCase().includes(query) || v.music?.toLowerCase().includes(query)); const hashtags = [...new Set(allVideos.flatMap(v => (v.description?.match(/#\w+/g) || []).filter(h => h.toLowerCase().includes(query))))]; resultsDiv.innerHTML = `${users.length ? `<div class="mb-5"><h4 class="text-sm opacity-60 mb-2">👥 مستخدمين</h4>${users.map(u => `<div class="search-result" onclick="viewProfile('${u.uid}')"><div class="search-avatar">${u.avatarUrl ? `<img src="${u.avatarUrl}">` : (u.username.charAt(0)?.toUpperCase() || '👤')}</div><div>@${u.username} ${u.verified ? '<i class="fas fa-check-circle" style="color:#1d9bf0;"></i>' : ''}</div></div>`).join('')}</div>` : ''}${hashtags.length ? `<div class="mb-5"><h4 class="text-sm opacity-60 mb-2"># هاشتاقات</h4>${hashtags.map(h => `<div class="search-result" onclick="searchHashtag('${h.substring(1)}')"><i class="fas fa-hashtag text-[#fe2c55] w-8 text-xl"></i><div>${h}</div></div>`).join('')}</div>` : ''}${videos.length ? `<div><h4 class="text-sm opacity-60 mb-2">🎬 فيديوهات</h4>${videos.map(v => `<div class="search-result" onclick="playVideo('${v.url}')"><i class="fas fa-video w-8 text-xl"></i><div>${(v.description || 'فيديو').substring(0, 40)}</div></div>`).join('')}</div>` : ''}`; }
 
 // ========== الأصوات ==========
 function openSounds() { document.getElementById('soundsPanel').classList.add('open'); }
@@ -196,12 +186,13 @@ function closeSounds() { document.getElementById('soundsPanel').classList.remove
 function renderSoundsList() { const container = document.getElementById('soundsList'); if (!container) return; const sortedSounds = Object.entries(allSounds).sort((a, b) => b[1] - a[1]); container.innerHTML = sortedSounds.map(([name, count]) => `<div class="sound-item" onclick="searchBySound('${name}')"><div class="sound-icon"><i class="fas fa-music"></i></div><div class="sound-info"><div class="sound-name">${name}</div><div class="sound-count">${count} فيديو</div></div></div>`).join(''); }
 function searchBySound(soundName) { document.getElementById('searchInput').value = soundName; closeSounds(); openSearch(); searchAll(); }
 
-// ========== الملف الشخصي ==========
+// ========== الملف الشخصي مع علامة التوثيق ==========
 async function viewProfile(userId) { if (!userId) return; viewingProfileUserId = userId; await loadProfileData(userId); document.getElementById('profilePanel').classList.add('open'); }
 async function loadProfileData(userId) {
     const userSnap = await db.ref(`users/${userId}`).get(); const user = userSnap.val(); if (!user) return;
     const avatarDisplay = document.getElementById('profileAvatarDisplay'); if (user.avatarUrl && user.avatarUrl !== '') avatarDisplay.innerHTML = `<img src="${user.avatarUrl}">`; else avatarDisplay.innerHTML = user.username?.charAt(0)?.toUpperCase() || '👤';
-    document.getElementById('profileNameDisplay').innerText = user.username || 'مستخدم'; document.getElementById('profileBioDisplay').innerText = user.bio || '';
+    document.getElementById('profileNameDisplay').innerHTML = `${user.username || 'مستخدم'} ${user.verified ? '<i class="fas fa-check-circle" style="color:#1d9bf0; font-size:18px;"></i>' : ''}`;
+    document.getElementById('profileBioDisplay').innerText = user.bio || '';
     document.getElementById('profileFollowing').innerText = Object.keys(user.following || {}).length; document.getElementById('profileFollowers').innerText = Object.keys(user.followers || {}).length;
     const userVideos = allVideos.filter(v => v.sender === userId); const totalLikes = userVideos.reduce((sum, v) => sum + (v.likes || 0), 0); document.getElementById('profileLikes').innerText = totalLikes;
     const container = document.getElementById('profileVideosList'); container.innerHTML = ''; if (userVideos.length === 0) container.innerHTML = '<div class="text-center text-gray-400 py-10">لا توجد فيديوهات بعد</div>'; else userVideos.forEach(v => { const thumb = document.createElement('div'); thumb.className = 'video-thumb'; thumb.innerHTML = '<i class="fas fa-play"></i>'; thumb.onclick = () => playVideo(v.url); container.appendChild(thumb); });
@@ -236,7 +227,7 @@ async function openConversations() {
             <div class="conversation-item" onclick="openPrivateChat('${otherId}')">
                 <div class="conversation-avatar">${otherUser.avatarUrl ? `<img src="${otherUser.avatarUrl}">` : (otherUser.username?.charAt(0) || '👤')}</div>
                 <div class="conversation-info">
-                    <div class="conversation-name">@${otherUser.username}</div>
+                    <div class="conversation-name">@${otherUser.username} ${otherUser.verified ? '<i class="fas fa-check-circle" style="color:#1d9bf0; font-size:12px;"></i>' : ''}</div>
                     <div class="conversation-last-msg">${lastMsg.substring(0, 30)}</div>
                 </div>
             </div>
@@ -249,7 +240,7 @@ function closeConversations() { document.getElementById('conversationsPanel').cl
 async function openPrivateChat(otherUserId) {
     currentChatUserId = otherUserId;
     const user = allUsers[otherUserId];
-    document.getElementById('chatUserName').innerText = `@${user?.username || 'مستخدم'}`;
+    document.getElementById('chatUserName').innerHTML = `@${user?.username || 'مستخدم'} ${user?.verified ? '<i class="fas fa-check-circle" style="color:#1d9bf0;"></i>' : ''}`;
     document.getElementById('chatAvatarDisplay').innerHTML = user?.avatarUrl ? `<img src="${user.avatarUrl}" class="w-full h-full object-cover rounded-full">` : (user?.username?.charAt(0) || '👤');
     await loadPrivateMessages(otherUserId);
     document.getElementById('privateChatPanel').classList.add('open');
@@ -366,16 +357,20 @@ function switchTab(tab) {
     if (tab === 'home') { closeSearch(); closeNotifications(); closeProfile(); closeSounds(); closeUploadPanel(); closeConversations(); closePrivateChat(); }
 }
 
-// ========== مراقبة المستخدم ==========
+// ========== مراقبة المستخدم (معدل - بدون دوال المصادقة) ==========
 auth.onAuthStateChanged(async (user) => {
     if (user) {
-        currentUser = user; await loadUserData(); checkAdminStatus();
-        document.getElementById('loginScreen').style.display = 'none';
+        currentUser = user; 
+        await loadUserData(); 
+        checkAdminStatus();
         document.getElementById('mainApp').style.display = 'block';
-        const presenceRef = db.ref('presence/' + user.uid); presenceRef.set(true); presenceRef.onDisconnect().remove();
+        const presenceRef = db.ref('presence/' + user.uid); 
+        presenceRef.set(true); 
+        presenceRef.onDisconnect().remove();
     } else {
-        document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
+        // المستخدم غير مسجل الدخول - التوجيه إلى صفحة التسجيل
+        window.location.href = 'auth.html';
     }
 });
-console.log('✅ SHΔDØW Ultimate System Ready');
+
+console.log('✅ SHΔDØW Ultimate System Ready with Verification System');
