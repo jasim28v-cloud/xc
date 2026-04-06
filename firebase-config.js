@@ -1,19 +1,18 @@
 const firebaseConfig = {
-    apiKey: "AIzaSyCVyQS6kuOBDyx_FXoGx6xgXxbbzjs5COg",
-    authDomain: "fokx-c135a.firebaseapp.com",
-    databaseURL: "https://fokx-c135a-default-rtdb.firebaseio.com",
-    projectId: "fokx-c135a",
-    storageBucket: "fokx-c135a.firebasestorage.app",
-    messagingSenderId: "447033620521",
-    appId: "1:447033620521:web:730fde0a59cb5624128438"
+    apiKey: "AIzaSyAxtEkrEgl0C9djPkxKKX-sENtOzPEbHB8",
+    authDomain: "tope-e5350.firebaseapp.com",
+    databaseURL: "https://tope-e5350-default-rtdb.firebaseio.com",
+    projectId: "tope-e5350",
+    storageBucket: "tope-e5350.firebasestorage.app",
+    messagingSenderId: "187788115549",
+    appId: "1:187788115549:web:0f3c00ff62c1ebc5ed97b4"
 };
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
-const storage = firebase.storage();
 
-const CLOUD_NAME = 'dk5kas1gc';
-const UPLOAD_PRESET = 'go_kck';
+const CLOUD_NAME = 'daemk3hut';
+const UPLOAD_PRESET = 'fok2_k';
 
-console.log('✅ SHΔDØW System Ready');
+console.log('✅ SHΔDØW Ready');
