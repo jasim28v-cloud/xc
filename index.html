@@ -15,21 +15,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #000; color: #fff; overflow: hidden; height: 100vh; }
         
-        /* شاشة تسجيل الدخول */
-        .login-screen { position: fixed; inset: 0; z-index: 1000; background: radial-gradient(circle at 30% 10%, #0a0a0a, #000); display: flex; align-items: center; justify-content: center; }
-        .login-card { background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); border-radius: 32px; padding: 40px 28px; width: 90%; max-width: 380px; text-align: center; border: 1px solid rgba(254,44,85,0.3); box-shadow: 0 0 40px rgba(254,44,85,0.2); animation: fadeInUp 0.5s ease; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .login-card h1 { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, #fe2c55, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 30px; }
-        .login-card input { width: 100%; padding: 14px 18px; margin: 10px 0; border-radius: 30px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: white; font-size: 15px; }
-        .login-card input:focus { outline: none; border-color: #fe2c55; background: rgba(254,44,85,0.1); }
-        .login-card button { width: 100%; padding: 14px; margin-top: 20px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); border: none; border-radius: 30px; color: white; font-weight: bold; cursor: pointer; }
-        .auth-tabs { display: flex; gap: 10px; margin-bottom: 30px; background: rgba(255,255,255,0.05); border-radius: 60px; padding: 4px; }
-        .auth-tab { flex: 1; padding: 12px; background: none; border: none; color: #888; cursor: pointer; border-radius: 60px; transition: all 0.3s; }
-        .auth-tab.active { background: #fe2c55; color: white; box-shadow: 0 0 15px rgba(254,44,85,0.5); }
-        .auth-form { display: none; }
-        .auth-form.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
         /* التطبيق الرئيسي */
         #mainApp { display: none; height: 100vh; background: #000; position: relative; }
         
@@ -56,6 +41,7 @@
         .author-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fe2c55, #ff6b6b); display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; border: 2px solid white; overflow: hidden; }
         .author-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .author-name { font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .verified-badge { color: #1d9bf0; font-size: 16px; }
         .follow-btn { background: #fe2c55; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; border: none; color: white; }
         .video-caption { font-size: 14px; margin-bottom: 8px; line-height: 1.4; }
         .video-music { font-size: 12px; opacity: 0.8; display: flex; align-items: center; gap: 6px; cursor: pointer; }
@@ -105,8 +91,7 @@
         .form-group.half { flex: 1; }
         .hashtag-suggestions, .music-suggestions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
         .hashtag-suggestion, .music-suggestion { background: rgba(254,44,85,0.2); padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #fe2c55; cursor: pointer; transition: all 0.2s; }
-        .music-suggestion { display: flex; align-items: center; gap: 8px; width: 100%; }
-        .upload-progress { margin: 20px 0; }
+        .upload-progress { margin: 20px 0; display: none; }
         .progress-bar { background: rgba(255,255,255,0.1); border-radius: 30px; height: 8px; overflow: hidden; }
         .progress-fill { background: linear-gradient(90deg, #fe2c55, #ff6b6b); width: 0%; height: 100%; transition: width 0.3s; border-radius: 30px; }
         .progress-text { text-align: center; margin-top: 8px; font-size: 12px; color: #fe2c55; }
@@ -114,36 +99,26 @@
         .cancel-upload-btn, .upload-submit-btn { padding: 14px; border-radius: 30px; font-weight: bold; cursor: pointer; transition: all 0.2s; border: none; }
         .cancel-upload-btn { flex: 1; background: rgba(255,255,255,0.1); color: white; }
         .upload-submit-btn { flex: 2; background: linear-gradient(135deg, #fe2c55, #ff6b6b); color: white; }
-        .upload-submit-btn.disabled { opacity: 0.5; pointer-events: none; }
-        .upload-status { margin-top: 16px; text-align: center; font-size: 13px; }
         
         /* الدردشة الخاصة */
-        .private-chat-panel, .conversations-panel { display: flex; flex-direction: column; background: #000; }
         .private-messages-list { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
         .private-message { display: flex; gap: 10px; max-width: 85%; }
         .private-message.sent { align-self: flex-end; flex-direction: row-reverse; }
-        .private-message.received { align-self: flex-start; }
         .message-bubble { background: #1a1a1a; padding: 10px 14px; border-radius: 20px; word-break: break-word; }
         .message-bubble.sent { background: #fe2c55; color: white; }
-        .message-bubble.received { background: #2a2a2a; }
         .message-image { max-width: 200px; max-height: 200px; border-radius: 16px; cursor: pointer; }
-        .message-time { font-size: 10px; opacity: 0.5; margin-top: 4px; text-align: right; }
         .private-chat-input { display: flex; gap: 12px; padding: 16px; background: #111; border-top: 1px solid rgba(255,255,255,0.1); align-items: center; }
         .chat-attachment { width: 40px; height: 40px; background: #1a1a1a; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .private-chat-input input { flex: 1; background: #1a1a1a; border: none; border-radius: 30px; padding: 12px 16px; color: white; }
         .send-btn { background: #fe2c55; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; color: white; cursor: pointer; }
         .conversations-list { padding: 16px; }
-        .conversation-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: background 0.2s; }
-        .conversation-item:hover { background: rgba(255,255,255,0.05); }
-        .conversation-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fe2c55, #ff6b6b); display: flex; align-items: center; justify-content: center; font-size: 20px; overflow: hidden; }
-        .conversation-info { flex: 1; }
-        .conversation-name { font-weight: bold; }
-        .conversation-last-msg { font-size: 12px; opacity: 0.6; }
+        .conversation-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
+        .conversation-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #fe2c55, #ff6b6b); display: flex; align-items: center; justify-content: center; overflow: hidden; }
         
         /* باقي العناصر */
         .comment-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .comment-avatar { width: 40px; height: 40px; border-radius: 50%; background: #fe2c55; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .add-comment { display: flex; gap: 12px; padding: 12px; background: #1a1a1a; border-radius: 30px; margin-top: 16px; position: sticky; bottom: 0; }
+        .add-comment { display: flex; gap: 12px; padding: 12px; background: #1a1a1a; border-radius: 30px; margin-top: 16px; }
         .add-comment input { flex: 1; background: none; border: none; color: white; outline: none; }
         .search-input { width: 100%; padding: 14px 18px; border-radius: 30px; background: #1a1a1a; border: none; color: white; margin-bottom: 20px; }
         .search-result { display: flex; align-items: center; gap: 14px; padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); cursor: pointer; }
@@ -161,20 +136,27 @@
         .edit-input { width: 100%; padding: 14px 16px; margin: 10px 0; border-radius: 16px; background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); color: white; }
         .save-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); border: none; border-radius: 30px; color: white; font-weight: bold; cursor: pointer; margin-top: 20px; }
         .notification-item { display: flex; align-items: center; gap: 14px; padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        
+        /* لوحة الأدمن */
         .admin-panel-section { margin-top: 20px; padding: 16px; background: rgba(254,44,85,0.1); border-radius: 20px; border: 1px solid rgba(254,44,85,0.3); }
         .admin-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
         .admin-stat-card { background: rgba(0,0,0,0.5); border-radius: 12px; padding: 12px; text-align: center; }
         .admin-stat-number { font-size: 24px; font-weight: bold; color: #fe2c55; }
         .admin-stat-label { font-size: 11px; opacity: 0.7; margin-top: 4px; }
         .admin-list { max-height: 300px; overflow-y: auto; }
-        .admin-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; margin-bottom: 8px; }
+        .admin-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
         .admin-item-info { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; }
         .admin-item-avatar { width: 36px; height: 36px; border-radius: 50%; background: #fe2c55; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
         .admin-item-text { overflow: hidden; }
-        .admin-item-name { font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .admin-item-name { font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
         .admin-item-email { font-size: 10px; opacity: 0.6; }
-        .admin-delete-btn, .admin-ban-btn { background: rgba(255,0,0,0.3); border: none; color: #ff4444; padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; margin-left: 5px; }
+        .admin-delete-btn, .admin-ban-btn, .admin-verify-btn, .admin-unverify-btn { padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: none; margin: 2px; }
+        .admin-delete-btn { background: rgba(255,0,0,0.3); color: #ff4444; }
         .admin-ban-btn { background: rgba(255,165,0,0.3); color: #ffaa44; }
+        .admin-verify-btn { background: rgba(76,175,80,0.3); color: #4caf50; }
+        .admin-unverify-btn { background: rgba(76,175,80,0.2); color: #4caf50; }
+        
+        /* الملف الشخصي */
         .profile-header { text-align: center; padding: 60px 20px 40px; background: linear-gradient(135deg, #fe2c55, #ff6b6b); }
         .profile-avatar-large { width: 100px; height: 100px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 48px; margin: 0 auto; border: 3px solid white; overflow: hidden; cursor: pointer; }
         .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
@@ -191,31 +173,7 @@
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول -->
-<div id="loginScreen" class="login-screen">
-    <div class="login-card">
-        <h1>SHΔDØW</h1>
-        <div class="auth-tabs">
-            <button class="auth-tab active" onclick="switchAuth('login')">تسجيل الدخول</button>
-            <button class="auth-tab" onclick="switchAuth('register')">إنشاء حساب</button>
-        </div>
-        <div id="loginForm" class="auth-form active">
-            <input type="email" id="loginEmail" placeholder="البريد الإلكتروني">
-            <input type="password" id="loginPassword" placeholder="كلمة المرور">
-            <button onclick="login()">دخول</button>
-            <div id="loginMsg" class="text-red-500 text-sm text-center mt-3"></div>
-        </div>
-        <div id="registerForm" class="auth-form">
-            <input type="text" id="regName" placeholder="اسم المستخدم">
-            <input type="email" id="regEmail" placeholder="البريد الإلكتروني">
-            <input type="password" id="regPass" placeholder="كلمة المرور (6 أحرف)">
-            <button onclick="register()">إنشاء حساب</button>
-            <div id="regMsg" class="text-red-500 text-sm text-center mt-3"></div>
-        </div>
-    </div>
-</div>
-
-<!-- التطبيق الرئيسي -->
+<!-- التطبيق الرئيسي (بدون شاشة تسجيل دخول) -->
 <div id="mainApp">
     <div class="top-bar">
         <div class="logo"><div class="logo-icon">S</div><span class="logo-text">SHΔDØW</span></div>
@@ -256,7 +214,7 @@
     <!-- لوحة الإشعارات -->
     <div id="notificationsPanel" class="notifications-panel"><div class="panel-header"><h3>الإشعارات</h3><button class="close-btn" onclick="closeNotifications()"><i class="fas fa-times"></i></button></div><div id="notificationsList" class="p-4"></div></div>
 
-    <!-- لوحة الرفع المتطورة -->
+    <!-- لوحة الرفع -->
     <div id="uploadPanel" class="upload-panel">
         <div class="panel-header"><h3><i class="fas fa-upload ml-2"></i> رفع فيديو جديد</h3><button class="close-btn" onclick="closeUploadPanel()"><i class="fas fa-times"></i></button></div>
         <div class="upload-content">
@@ -269,7 +227,7 @@
                 <div class="form-group"><label><i class="fas fa-pen"></i> وصف الفيديو</label><textarea id="videoDescription" rows="3" placeholder="اكتب وصفاً للفيديو... استخدم # للهاشتاقات" oninput="showHashtagSuggestions()"></textarea><div id="hashtagSuggestions" class="hashtag-suggestions"></div></div>
                 <div class="form-group"><label><i class="fas fa-music"></i> اسم المقطع / الصوت</label><input type="text" id="videoMusic" placeholder="مثال: Original Sound - أو اسم أغنية" oninput="showMusicSuggestions()"><div id="musicSuggestions" class="music-suggestions"></div></div>
                 <div class="form-row"><div class="form-group half"><label><i class="fas fa-users"></i> الرؤية</label><select id="videoVisibility"><option value="public">عام (الكل يشاهده)</option><option value="private">خاص (المتابعون فقط)</option></select></div><div class="form-group half"><label><i class="fas fa-comment"></i> التعليقات</label><select id="videoComments"><option value="all">الكل يمكنه التعليق</option><option value="followers">المتابعون فقط</option><option value="none">تعطيل التعليقات</option></select></div></div>
-                <div class="upload-progress" id="uploadProgressBar" style="display:none"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><div class="progress-text" id="progressText">0%</div></div>
+                <div id="uploadProgressBar" class="upload-progress"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><div class="progress-text" id="progressText">0%</div></div>
                 <div class="upload-actions"><button class="cancel-upload-btn" onclick="closeUploadPanel()">إلغاء</button><button class="upload-submit-btn" id="uploadSubmitBtn" onclick="uploadVideoWithDetails()">رفع الفيديو</button></div>
                 <div id="uploadStatus" class="upload-status"></div>
             </div>
