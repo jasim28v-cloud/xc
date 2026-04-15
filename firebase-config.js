@@ -1,11 +1,12 @@
+// Firebase Configuration (حساب amre-3fae9)
 const firebaseConfig = {
-    apiKey: "AIzaSyCVyQS6kuOBDyx_FXoGx6xgXxbbzjs5COg",
-    authDomain: "fokx-c135a.firebaseapp.com",
-    databaseURL: "https://fokx-c135a-default-rtdb.firebaseio.com",
-    projectId: "fokx-c135a",
-    storageBucket: "fokx-c135a.firebasestorage.app",
-    messagingSenderId: "447033620521",
-    appId: "1:447033620521:web:730fde0a59cb5624128438"
+    apiKey: "AIzaSyCFTMtaIp9ld3UKmscT8MBxfCKh5_-fOcM",
+    authDomain: "amre-3fae9.firebaseapp.com",
+    databaseURL: "https://amre-3fae9-default-rtdb.firebaseio.com",
+    projectId: "amre-3fae9",
+    storageBucket: "amre-3fae9.firebasestorage.app",
+    messagingSenderId: "573470407576",
+    appId: "1:573470407576:web:3a24d023cbb10d6ce309ed"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -13,7 +14,8 @@ const auth = firebase.auth();
 const db = firebase.database();
 const storage = firebase.storage();
 
-const CLOUD_NAME = 'dk5kas1gc';
-const UPLOAD_PRESET = 'go_kck';
+// Cloudinary Configuration (حساب do33_x)
+const CLOUD_NAME = 'da457cqma';
+const UPLOAD_PRESET = 'do33_x'; // استخدمت الاسم do33_x بناءً على طلبك
 
-console.log('✅ SHΔDØW System Ready');
+console.log('✅ Firebase configuration loaded');
